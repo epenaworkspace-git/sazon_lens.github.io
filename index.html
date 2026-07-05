@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sazón Lens — recetas desde video, foto o texto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241f1a;
+    --ink-soft:#4a4239;
+    --paper:#efe7d8;
+    --paper-dark:#e3d8c0;
+    --paper-card:#f7f2e6;
+    --accent:#c98a1f;
+    --accent-dark:#a06e17;
+    --herb:#4b6b4f;
+    --herb-dark:#37502f;
+    --rust:#a63d33;
+    --rust-bg:#f3e0dc;
+    --line: rgba(36,31,26,.18);
+    --shadow: 0 10px 30px rgba(36,31,26,.16);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(36,31,26,.06) 1px, transparent 0);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    background:var(--ink);
+    color:var(--paper);
+    padding:18px 24px 0 24px;
+    position:sticky; top:0; z-index:40;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:10px; margin-bottom:14px;
+  }
+  .brand .mark{
+    font-family:'Fraunces',serif; font-weight:900; font-size:26px; color:var(--accent);
+  }
+  .brand .tagline{
+    font-size:12.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
+  }
+  nav.tabs{
+    display:flex; gap:6px; flex:1;
+    overflow-x:auto; scroll-behavior:smooth; scroll-snap-type:x proximity;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  nav.tabs::-webkit-scrollbar{ display:none; }
+  .tabs-carousel{ display:flex; align-items:flex-end; gap:6px; }
+  .tab-arrow{
+    flex:0 0 auto; background:#332c24; color:#d8cfbe; border:none;
+    width:30px; height:30px; border-radius:50%; font-size:17px; line-height:1;
+    display:flex; align-items:center; justify-content:center; margin-bottom:6px;
+    cursor:pointer; transition: background .15s, color .15s;
+  }
+  .tab-arrow:hover{ background:#463c30; color:var(--paper); }
+  .tab-arrow:disabled{ opacity:.3; cursor:default; }
+  .tab-btn{
+    appearance:none; border:none; cursor:pointer;
+    background:#332c24;
+    color:#d8cfbe;
+    font-family:'Fraunces',serif; font-weight:600; font-size:14.5px;
+    padding:11px 22px 13px 22px;
+    border-radius:10px 10px 0 0;
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0% 100%);
+    transition: background .15s, color .15s, transform .1s;
+    position:relative; top:1px;
+    flex:0 0 auto; white-space:nowrap; scroll-snap-align:start;
+  }
+  .tab-btn:hover{ background:#463c30; color:var(--paper); }
+  .tab-btn.active{
+    background:var(--paper-card); color:var(--ink);
+  }
+  main{ max-width:980px; margin:0 auto; padding:28px 20px 80px 20px; }
+  .tab-panel{ display:none; animation: fade .25s ease; }
+  .tab-panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  /* ---------- Extract form ---------- */
+  .intro{ margin-bottom:18px; }
+  .intro p{ color:var(--ink-soft); max-width:60ch; line-height:1.5; }
+  .url-form{
+    display:flex; gap:10px; background:var(--paper-card); padding:14px;
+    border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  input[type=text], input[type=password], input[type=number], select, textarea{
+    font-family:'Inter',sans-serif; font-size:14.5px;
+    border:1px solid var(--line); border-radius:9px; padding:11px 13px;
+    background:#fffdf8; color:var(--ink);
+  }
+  input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus{
+    outline:2px solid var(--accent); outline-offset:1px;
+  }
+  #videoUrl{ flex:1; min-width:220px; }
+  button{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:14px;
+    cursor:pointer; border:none; border-radius:9px; padding:11px 18px;
+    background:var(--accent); color:#fff8ee;
+    transition: transform .08s, background .15s;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button:active{ transform:scale(.97); }
+  button.secondary{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
+  button.secondary:hover{ background:var(--paper-dark); }
+  button.ghost{ background:transparent; color:var(--herb-dark); border:none; padding:6px 8px; font-weight:600;}
+  button.danger{ background:var(--rust); color:#fff2ef;}
+  button.danger:hover{ background:#832f27; }
+  button:disabled{ opacity:.55; cursor:not-allowed; }
+
+  .platform-hint{ font-size:12.5px; color:var(--ink-soft); margin-top:8px; font-family:'IBM Plex Mono',monospace;}
+
+  .dropzone{
+    background:var(--paper-card); border:2px dashed var(--line); border-radius:var(--radius);
+    padding:26px; text-align:center; cursor:pointer; transition: border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.dragover{ border-color:var(--accent); background:var(--paper-dark); }
+  .dropzone p{ margin:8px 0 0 0; color:var(--ink-soft); font-size:14px; }
+  .dropzone img#imagePreview{ max-width:100%; max-height:320px; border-radius:10px; object-fit:contain; }
+
+  .chat-box-form{
+    display:flex; flex-direction:column; gap:10px; background:var(--paper-card); padding:14px;
+    border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
+  }
+  .chat-textarea{
+    width:100%; min-height:200px; resize:vertical; font-size:15.5px; line-height:1.5;
+  }
+  .chat-box-form button{ align-self:flex-end; }
+
+  #fallbackArea{
+    margin-top:12px; background:var(--paper-card); border:1px dashed var(--accent);
+    border-radius:var(--radius); padding:14px;
+  }
+  #fallbackArea textarea{ width:100%; min-height:100px; resize:vertical; }
+
+  #statusArea{ margin-top:16px; }
+  .status{
+    padding:12px 14px; border-radius:10px; font-size:14px; display:flex; gap:10px; align-items:flex-start;
+  }
+  .status.info{ background:#eee4cd; color:#5c4a1f; }
+  .status.loading{ background:#e7e0cf; color:var(--ink-soft); }
+  .status.error{ background:var(--rust-bg); color:var(--rust); white-space:pre-wrap; }
+  .status.ok{ background:#e2ead7; color:var(--herb-dark); }
+  .spinner{
+    width:16px; height:16px; border-radius:50%;
+    border:2.5px solid #cbb; border-top-color:var(--accent);
+    animation: spin .7s linear infinite; flex-shrink:0; margin-top:2px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- Recipe card (signature element) ---------- */
+  .recipe-card{
+    margin-top:22px; background:var(--paper-card); border-radius:var(--radius);
+    box-shadow:var(--shadow); position:relative; overflow:hidden; border:1px solid var(--line);
+  }
+  .recipe-card::before{
+    content:""; position:absolute; top:16px; left:0; right:0; height:0;
+    border-top:2px dashed rgba(36,31,26,.25);
+  }
+  .card-holes{
+    position:absolute; top:6px; left:0; right:0; display:flex; justify-content:center; gap:120px;
+  }
+  .card-holes span{
+    width:12px; height:12px; border-radius:50%; background:var(--paper);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.25);
+  }
+  .card-body{ padding:38px 26px 26px 26px; }
+  .card-hero{
+    width:100%; max-height:340px; object-fit:cover; border-radius:10px; margin-bottom:16px;
+    border:1px solid var(--line); background:var(--paper-dark);
+  }
+  .card-hero-placeholder{
+    width:100%; height:150px; border-radius:10px; margin-bottom:16px;
+    background:repeating-linear-gradient(45deg, var(--paper-dark), var(--paper-dark) 10px, var(--paper) 10px, var(--paper) 20px);
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:13px; text-align:center; padding:10px;
+  }
+  .card-title-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .card-title-row h2{ font-size:28px; line-height:1.15; }
+  .card-title-row input.title-edit{ font-family:'Fraunces',serif; font-weight:700; font-size:24px; width:100%; }
+  .card-summary{ color:var(--ink-soft); margin-top:8px; line-height:1.5; }
+  .meta-strip{
+    display:flex; flex-wrap:wrap; gap:14px; margin:16px 0; font-family:'IBM Plex Mono',monospace; font-size:12.8px;
+  }
+  .meta-chip{
+    background:var(--paper-dark); padding:6px 11px; border-radius:20px; display:flex; gap:6px; align-items:center;
+  }
+  .servings-control{ display:flex; align-items:center; gap:8px; background:var(--paper-dark); border-radius:20px; padding:4px 6px 4px 12px; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .servings-control button{ padding:3px 10px; border-radius:20px; font-size:14px; }
+  .section-title{
+    font-family:'Fraunces',serif; font-weight:700; font-size:17px; margin:22px 0 10px 0;
+    display:flex; align-items:center; gap:8px; color:var(--herb-dark);
+  }
+  .section-title::after{ content:""; flex:1; height:1px; background:var(--line); }
+  ul.ingredients{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+  ul.ingredients li{
+    display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:8px; background:#fffdf8; border:1px solid var(--line);
+  }
+  ul.ingredients li.done label{ text-decoration:line-through; opacity:.5; }
+  ul.ingredients .amt{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--accent-dark); min-width:70px; }
+  ol.steps{ list-style:none; margin:0; padding:0; display:grid; gap:10px; counter-reset: step; }
+  ol.steps li{
+    counter-increment: step; display:flex; gap:12px; padding:12px; border-radius:10px; background:#fffdf8; border:1px solid var(--line);
+  }
+  ol.steps li.done{ opacity:.55; }
+  ol.steps li.done p{ text-decoration:line-through; }
+  ol.steps .num{
+    font-family:'Fraunces',serif; font-weight:700; color:#fff; background:var(--herb);
+    width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  ol.steps p{ margin:0 0 6px 0; line-height:1.5; }
+  .step-timer{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:center; }
+  .equip-list, .tags-list{ display:flex; flex-wrap:wrap; gap:8px; }
+  .equip-list span, .tags-list span{
+    background:var(--paper-dark); border-radius:20px; padding:5px 12px; font-size:13px;
+  }
+  .tips-box{ background:#f4ecd7; border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 8px 8px 0; font-size:14px; }
+  .card-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; padding-top:16px; border-top:1px dashed var(--line); }
+
+  /* ---------- My recipes ---------- */
+  .recipes-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+  .recipe-mini{
+    background:var(--paper-card); border-radius:12px; border:1px solid var(--line); box-shadow:var(--shadow);
+    overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+  }
+  .recipe-mini img{ width:100%; height:120px; object-fit:cover; background:var(--paper-dark); }
+  .recipe-mini .ph{ width:100%; height:120px; background:var(--paper-dark); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:24px;}
+  .recipe-mini .mini-body{ padding:12px; flex:1; display:flex; flex-direction:column; gap:6px; }
+  .recipe-mini h3{ font-size:15.5px; line-height:1.25; }
+  .recipe-mini .mini-meta{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+  .recipe-mini .mini-actions{ margin-top:auto; display:flex; justify-content:flex-end; }
+  .empty-state{ color:var(--ink-soft); text-align:center; padding:50px 10px; font-size:15px; }
+
+  /* ---------- Settings ---------- */
+  .settings-card{
+    background:var(--paper-card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
+    padding:24px; display:grid; gap:18px; max-width:640px;
+  }
+  .field{ display:grid; gap:6px; }
+  .field label{ font-weight:600; font-size:13.5px; }
+  .field .hint{ font-size:12.5px; color:var(--ink-soft); }
+  .field .row{ display:flex; gap:8px; }
+  .field .row input, .field .row select{ flex:1; }
+  .key-row{ position:relative; }
+  a{ color:var(--accent-dark); }
+  hr.sep{ border:none; border-top:1px solid var(--line); margin:2px 0; }
+  .badge-free{ background:var(--herb); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
+
+  footer{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:30px 0 10px 0; }
+
+  @media print{
+    header.topbar, .card-actions, .url-form, #fallbackArea, .servings-edit-btn, .tab-panel:not(.printing){ display:none !important; }
+    body{ background:#fff; }
+    .recipe-card{ box-shadow:none; border:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">🔥 Sazón Lens</span>
+    <span class="tagline">recetas desde video, foto o texto · con Gemini AI</span>
+  </div>
+  <div class="tabs-carousel">
+    <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
+    <nav class="tabs" id="tabsTrack">
+      <button class="tab-btn active" data-tab="extract">Desde Video</button>
+      <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
+      <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
+      <button class="tab-btn" data-tab="myrecipes">Mis Recetas</button>
+      <button class="tab-btn" data-tab="settings">Configuración</button>
+    </nav>
+    <button class="tab-arrow" id="tabNext" type="button" aria-label="Siguiente pestaña">›</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- EXTRACT TAB -->
+  <section id="tab-extract" class="tab-panel active">
+    <div class="intro">
+      <p>Pega el enlace de un video de cocina y la IA transformará el video en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato. Funciona mejor con enlaces de <strong>YouTube</strong>, que Gemini puede ver directamente.</p>
+    </div>
+    <div class="url-form">
+      <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
+      <button id="extractBtn">Extraer receta</button>
+    </div>
+    <div class="platform-hint" id="platformHint"></div>
+
+    <div id="fallbackArea" hidden>
+      <div class="field">
+        <label>Este enlace no es de YouTube — pega aquí la descripción, subtítulos o transcripción del video (opcional pero recomendado)</label>
+        <textarea id="fallbackText" placeholder="Ej: ingredientes que se mencionan, pasos que se ven en el video, texto que aparece en pantalla..."></textarea>
+      </div>
+    </div>
+
+    <div id="statusArea"></div>
+    <div id="recipeResult"></div>
+  </section>
+
+  <!-- IMAGE EXTRACT TAB -->
+  <section id="tab-imageExtract" class="tab-panel">
+    <div class="intro">
+      <p>Sube una foto de un plato, o incluso una foto de una receta escrita a mano o de un libro, y la IA reconstruirá la receta completa: ingredientes, utensilios y pasos.</p>
+    </div>
+    <div class="dropzone" id="imageDropzone">
+      <input type="file" id="recipeImageInput" accept="image/*" hidden>
+      <div id="imageDropzoneContent">
+        <span style="font-size:34px;">📷</span>
+        <p><strong>Haz clic para subir una imagen</strong><br>o arrástrala aquí</p>
+      </div>
+      <img id="imagePreview" hidden>
+    </div>
+    <div class="url-form" style="margin-top:12px;">
+      <button id="extractImageBtn" disabled>Extraer receta de la imagen</button>
+      <button class="secondary" id="clearImageBtn" type="button" hidden>Quitar imagen</button>
+    </div>
+    <div id="imageStatusArea"></div>
+    <div id="imageRecipeResult"></div>
+  </section>
+
+  <!-- TEXT GENERATE TAB -->
+  <section id="tab-textGenerate" class="tab-panel">
+    <div class="intro">
+      <p>Describe con tus palabras qué receta quieres — por ejemplo "pasta alfredo cremosa para 2 personas" o "pan de plátano sin gluten" — y la IA generará la receta completa con ingredientes, utensilios y pasos detallados.</p>
+    </div>
+    <div class="chat-box-form">
+      <textarea id="textPrompt" class="chat-textarea" placeholder="Describe la receta que quieres, con todo el detalle que quieras...&#10;Ej: receta de pasta alfredo casera, cremosa, para 2 personas"></textarea>
+      <button id="generateTextBtn">Generar receta</button>
+    </div>
+    <div class="platform-hint">Tip: presiona Ctrl + Enter (o Cmd + Enter en Mac) para generar rápido.</div>
+    <div id="textStatusArea"></div>
+    <div id="textRecipeResult"></div>
+  </section>
+
+  <!-- MY RECIPES TAB -->
+  <section id="tab-myrecipes" class="tab-panel">
+    <div class="intro"><p>Tus recetas guardadas, listas para cocinar cuando quieras.</p></div>
+    <div class="recipes-grid" id="recipesGrid"></div>
+    <p class="empty-state" id="emptyRecipes" hidden>Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".</p>
+  </section>
+
+  <!-- SETTINGS TAB -->
+  <section id="tab-settings" class="tab-panel">
+    <div class="intro">
+      <p>Conecta tu propia clave de Gemini AI (gratis) para poder leer videos y generar imágenes. Tu clave se guarda solo en este navegador y se envía directamente a Google — nunca pasa por ningún otro servidor.</p>
+    </div>
+    <div class="settings-card">
+
+      <div class="field">
+        <label>Clave de API de Gemini <span class="badge-free">gratis en Google AI Studio</span></label>
+        <div class="key-row row">
+          <input type="password" id="apiKey" placeholder="AIza...">
+          <button type="button" class="secondary" id="toggleKeyBtn">Mostrar</button>
+        </div>
+        <span class="hint">Consíguela gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. El plan gratuito incluye cuota diaria sin costo.</span>
+      </div>
+
+      <hr class="sep">
+
+      <div class="field">
+        <label>Modelo de texto/video (extracción de recetas)</label>
+        <div class="row">
+          <input type="text" id="textModel" list="textModelList" value="gemini-2.5-flash">
+          <button type="button" class="secondary" id="loadModelsBtn">Cargar modelos disponibles</button>
+        </div>
+        <datalist id="textModelList">
+          <option value="gemini-2.5-flash">
+          <option value="gemini-2.5-pro">
+          <option value="gemini-2.5-flash-lite">
+          <option value="gemini-3.0-flash">
+          <option value="gemini-3.0-pro">
+        </datalist>
+        <span class="hint">Compatible con cualquier versión (2.5, 3.0, gratuita o de pago). Si escribes un nombre incorrecto, la app te avisará con el error exacto de Google.</span>
+      </div>
+
+      <div class="field">
+        <label>Modelo de generación de imágenes</label>
+        <input type="text" id="imageModel" list="imageModelList" value="gemini-2.5-flash-image">
+        <datalist id="imageModelList">
+          <option value="gemini-2.5-flash-image">
+          <option value="gemini-2.0-flash-preview-image-generation">
+          <option value="imagen-4.0-generate-001">
+        </datalist>
+        <span class="hint">Se usa para crear la fotografía del plato cuando el video no trae una imagen clara.</span>
+      </div>
+
+      <div class="field">
+        <label>Idioma de salida de la receta</label>
+        <select id="language">
+          <option value="español">Español</option>
+          <option value="english">English</option>
+          <option value="português">Português</option>
+          <option value="français">Français</option>
+          <option value="italiano">Italiano</option>
+        </select>
+      </div>
+
+      <div class="row" style="margin-top:6px;">
+        <button id="saveSettingsBtn">Guardar y verificar conexión</button>
+        <button class="secondary" id="testKeyBtn" type="button">Probar clave</button>
+        <button class="danger" id="deleteKeyBtn" type="button">Eliminar clave</button>
+      </div>
+      <div id="settingsStatus"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Sazón Lens — impulsado por Inteligencia Artificial.</footer>
+
+<script>
+/* ============================= STORAGE (funciona dentro y fuera de Claude) ============================= */
+const hasWidgetStorage = (typeof window.storage !== 'undefined');
+
+async function storeGet(key, fallbackParse){
+  try{
+    if(hasWidgetStorage){
+      const r = await window.storage.get(key, false);
+      return r ? r.value : null;
+    } else {
+      return localStorage.getItem(key);
+    }
+  }catch(e){ return null; }
+}
+async function storeSet(key, value){
+  try{
+    if(hasWidgetStorage){ await window.storage.set(key, value, false); }
+    else{ localStorage.setItem(key, value); }
+  }catch(e){ /* no bloquear la app si falla el guardado */ }
+}
+async function storeDelete(key){
+  try{
+    if(hasWidgetStorage){ await window.storage.delete(key, false); }
+    else{ localStorage.removeItem(key); }
+  }catch(e){}
+}
+async function storeListKeys(prefix){
+  try{
+    if(hasWidgetStorage){
+      const r = await window.storage.list(prefix, false);
+      return r ? r.keys : [];
+    } else {
+      const out = [];
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(prefix)) out.push(k);
+      }
+      return out;
+    }
+  }catch(e){ return []; }
+}
+
+/* ============================= STATE ============================= */
+let settings = { apiKey:'', textModel:'gemini-2.5-flash', imageModel:'gemini-2.5-flash-image', language:'español' };
+let currentRecipe = null; // recipe currently shown in Extract tab
+let currentImageBase64 = null;
+
+/* ============================= TABS ============================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'myrecipes') renderRecipesGrid();
+    btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    updateTabArrows();
+  });
+});
+
+const tabsTrack = document.getElementById('tabsTrack');
+const tabPrevBtn = document.getElementById('tabPrev');
+const tabNextBtn = document.getElementById('tabNext');
+tabPrevBtn.addEventListener('click', ()=> tabsTrack.scrollBy({left:-160, behavior:'smooth'}));
+tabNextBtn.addEventListener('click', ()=> tabsTrack.scrollBy({left:160, behavior:'smooth'}));
+tabsTrack.addEventListener('scroll', updateTabArrows);
+function updateTabArrows(){
+  const max = tabsTrack.scrollWidth - tabsTrack.clientWidth - 2;
+  tabPrevBtn.disabled = tabsTrack.scrollLeft <= 0;
+  tabNextBtn.disabled = tabsTrack.scrollLeft >= max;
+}
+window.addEventListener('resize', updateTabArrows);
+updateTabArrows();
+
+/* ============================= SETTINGS ============================= */
+async function loadSettings(){
+  const raw = await storeGet('settings');
+  if(raw){
+    try{ settings = Object.assign(settings, JSON.parse(raw)); }catch(e){}
+  }
+  document.getElementById('apiKey').value = settings.apiKey || '';
+  document.getElementById('textModel').value = settings.textModel || 'gemini-2.5-flash';
+  document.getElementById('imageModel').value = settings.imageModel || 'gemini-2.5-flash-image';
+  document.getElementById('language').value = settings.language || 'español';
+}
+
+document.getElementById('toggleKeyBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('apiKey');
+  const btn = document.getElementById('toggleKeyBtn');
+  if(input.type === 'password'){ input.type='text'; btn.textContent='Ocultar'; }
+  else{ input.type='password'; btn.textContent='Mostrar'; }
+});
+
+document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
+  settings.apiKey = document.getElementById('apiKey').value.trim();
+  settings.textModel = document.getElementById('textModel').value.trim() || 'gemini-2.5-flash';
+  settings.imageModel = document.getElementById('imageModel').value.trim() || 'gemini-2.5-flash-image';
+  settings.language = document.getElementById('language').value;
+  await storeSet('settings', JSON.stringify(settings));
+
+  if(!settings.apiKey){
+    setStatus('settingsStatus','ok','Configuración guardada (sin clave de API todavía).');
+    return;
+  }
+  setStatus('settingsStatus','loading','Configuración guardada. Verificando la conexión con Gemini...');
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(settings.apiKey)}`);
+    const data = await res.json();
+    if(!res.ok){ throw new Error(friendlyGoogleError(data, res.status)); }
+    setStatus('settingsStatus','ok', 'Configuración guardada y conexión con Gemini establecida correctamente. ✅');
+  }catch(err){
+    setStatus('settingsStatus','error', 'La configuración se guardó, pero no se logró conectar correctamente:\n' + err.message);
+  }
+});
+
+document.getElementById('deleteKeyBtn').addEventListener('click', async ()=>{
+  if(!confirm('¿Eliminar tu clave de API guardada en este navegador? Tendrás que volver a ingresarla para poder usar la app.')) return;
+  settings.apiKey = '';
+  await storeSet('settings', JSON.stringify(settings));
+  document.getElementById('apiKey').value = '';
+  setStatus('settingsStatus','ok','Tu clave de API fue eliminada de este navegador.');
+});
+
+document.getElementById('loadModelsBtn').addEventListener('click', async ()=>{
+  const key = document.getElementById('apiKey').value.trim();
+  if(!key){ setStatus('settingsStatus','error','Escribe primero tu clave de API para poder consultar los modelos disponibles.'); return; }
+  setStatus('settingsStatus','loading','Consultando modelos disponibles para tu clave...');
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    if(!res.ok){ throw new Error(friendlyGoogleError(data, res.status)); }
+    const models = (data.models || []);
+    const textList = document.getElementById('textModelList');
+    const imgList = document.getElementById('imageModelList');
+    textList.innerHTML = ''; imgList.innerHTML = '';
+    models.forEach(m=>{
+      const shortName = m.name.replace('models/','');
+      const methods = m.supportedGenerationMethods || [];
+      if(methods.includes('generateContent')){
+        const opt = document.createElement('option');
+        opt.value = shortName;
+        if(/image|imagen/i.test(shortName)) imgList.appendChild(opt);
+        else textList.appendChild(opt);
+      }
+    });
+    setStatus('settingsStatus','ok', `Se cargaron ${models.length} modelos disponibles para tu clave. Elige uno de la lista en los campos de arriba.`);
+  }catch(err){
+    setStatus('settingsStatus','error', 'No se pudieron cargar los modelos.\n' + err.message);
+  }
+});
+
+document.getElementById('testKeyBtn').addEventListener('click', async ()=>{
+  const key = document.getElementById('apiKey').value.trim();
+  if(!key){ setStatus('settingsStatus','error','Escribe una clave primero.'); return; }
+  setStatus('settingsStatus','loading','Probando la clave...');
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    if(!res.ok){ throw new Error(friendlyGoogleError(data, res.status)); }
+    setStatus('settingsStatus','ok', '¡La clave funciona correctamente!');
+  }catch(err){
+    setStatus('settingsStatus','error', err.message);
+  }
+});
+
+function setStatus(elId, kind, message){
+  const el = document.getElementById(elId);
+  const icon = kind==='loading' ? '<div class="spinner"></div>' : (kind==='error' ? '⚠️' : (kind==='ok' ? '✅' : 'ℹ️'));
+  el.innerHTML = `<div class="status ${kind}">${icon}<div>${escapeHtml(message)}</div></div>`;
+}
+function clearStatus(elId){ document.getElementById(elId).innerHTML=''; }
+
+/* ============================= ERROR HANDLING ============================= */
+function friendlyGoogleError(data, httpStatus){
+  const msg = (data && data.error && data.error.message) ? data.error.message : '';
+  const code = (data && data.error && data.error.code) ? data.error.code : httpStatus;
+  if(code === 400) return `La solicitud fue rechazada (400). Revisa que el enlace del video y el nombre del modelo sean correctos.\nDetalle de Google: ${msg}`;
+  if(code === 401 || code === 403) return `Tu clave de API no es válida o no tiene permiso (código ${code}). Revisa que la copiaste completa desde Google AI Studio.\nDetalle: ${msg}`;
+  if(code === 404) return `El modelo "${msg.includes('model') ? '' : ''}" no existe o no está disponible para tu clave (404). Prueba con "Cargar modelos disponibles" en Configuración.\nDetalle: ${msg}`;
+  if(code === 429) return `Se alcanzó el límite de uso gratuito por ahora (429 - cuota excedida). Espera un poco o cambia a un modelo distinto.\nDetalle: ${msg}`;
+  if(code === 500 || code === 503) return `El servicio de Google no respondió correctamente (${code}). Puede ser temporal, intenta de nuevo en unos segundos.\nDetalle: ${msg}`;
+  return msg || `Ocurrió un error inesperado (código ${code}).`;
+}
+
+function isYouTubeUrl(url){
+  return /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(url);
+}
+function detectPlatform(url){
+  if(isYouTubeUrl(url)) return 'YouTube';
+  if(/tiktok\.com/i.test(url)) return 'TikTok';
+  if(/instagram\.com/i.test(url)) return 'Instagram';
+  if(/facebook\.com|fb\.watch/i.test(url)) return 'Facebook';
+  if(/pinterest\.com|pin\.it/i.test(url)) return 'Pinterest';
+  return null;
+}
+
+document.getElementById('videoUrl').addEventListener('input', (e)=>{
+  const url = e.target.value.trim();
+  const platform = detectPlatform(url);
+  const hint = document.getElementById('platformHint');
+  const fallback = document.getElementById('fallbackArea');
+  if(!url){ hint.textContent=''; fallback.hidden = true; return; }
+  if(platform === 'YouTube'){
+    hint.textContent = 'YouTube detectado — Gemini puede ver el video directamente. ✅';
+    fallback.hidden = true;
+  } else if(platform){
+    hint.textContent = `${platform} detectado — Gemini no siempre puede acceder directamente a este tipo de enlace. Si la extracción falla, usa el campo de abajo para pegar la transcripción o descripción.`;
+    fallback.hidden = false;
+  } else {
+    hint.textContent = 'Enlace no reconocido — se intentará de todos modos, pero funciona mejor con YouTube.';
+    fallback.hidden = false;
+  }
+});
+
+/* ============================= GEMINI CALLS ============================= */
+async function callGemini(model, body, {retry=true} = {}){
+  if(!settings.apiKey) throw new Error('Falta tu clave de API de Gemini. Ve a la pestaña Configuración y agrégala (es gratis).');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
+  let res, data;
+  try{
+    res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+  }catch(networkErr){
+    throw new Error('No se pudo conectar con Gemini. Revisa tu conexión a internet (si el problema persiste, puede ser un bloqueo de CORS del navegador).');
+  }
+  try{ data = await res.json(); }
+  catch(e){ throw new Error('Google respondió con un formato inesperado.'); }
+
+  if(!res.ok){
+    const code = data && data.error && data.error.code;
+    if(retry && (code === 429 || code === 503 || code === 500)){
+      await new Promise(r=>setTimeout(r, 2500));
+      return callGemini(model, body, {retry:false});
+    }
+    throw new Error(friendlyGoogleError(data, res.status));
+  }
+  return data;
+}
+
+const RECIPE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING" },
+    summary: { type: "STRING" },
+    cuisine: { type: "STRING" },
+    difficulty: { type: "STRING" },
+    servings: { type: "NUMBER" },
+    prep_time_minutes: { type: "NUMBER" },
+    cook_time_minutes: { type: "NUMBER" },
+    total_time_minutes: { type: "NUMBER" },
+    equipment: { type: "ARRAY", items: { type: "STRING" } },
+    ingredients: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          item: { type: "STRING" },
+          amount: { type: "NUMBER" },
+          unit: { type: "STRING" },
+          notes: { type: "STRING" }
+        },
+        required: ["item"]
+      }
+    },
+    steps: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          number: { type: "NUMBER" },
+          instruction: { type: "STRING" },
+          duration_minutes: { type: "NUMBER" }
+        },
+        required: ["number","instruction"]
+      }
+    },
+    tips: { type: "ARRAY", items: { type: "STRING" } },
+    tags: { type: "ARRAY", items: { type: "STRING" } }
+  },
+  required: ["title","ingredients","steps"]
+};
+
+async function runRecipeExtraction(parts){
+  const body = {
+    contents: [{ role:'user', parts }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: RECIPE_SCHEMA,
+      temperature: 0.4
+    }
+  };
+  const data = await callGemini(settings.textModel, body);
+  const textOut = extractTextFromResponse(data);
+  let recipe;
+  try{ recipe = JSON.parse(textOut); }
+  catch(e){ throw new Error('Gemini respondió pero no se pudo interpretar la receta. Intenta de nuevo o prueba con otro modelo.'); }
+  recipe.servings = recipe.servings || 4;
+  recipe.servings_original = recipe.servings;
+  recipe.ingredients = (recipe.ingredients || []).map(ing=>({
+    item: ing.item || '', amount: (typeof ing.amount === 'number' ? ing.amount : 0),
+    unit: ing.unit || '', notes: ing.notes || ''
+  }));
+  recipe.steps = (recipe.steps || []).sort((a,b)=>(a.number||0)-(b.number||0));
+  return recipe;
+}
+
+async function extractRecipeFromVideo(url, fallbackText){
+  const parts = [];
+  if(isYouTubeUrl(url)){
+    parts.push({ file_data: { file_uri: url } });
+  }
+  let instruction = `Mira este video de cocina y extrae la receta completa. Responde en ${settings.language}. Sé preciso con cantidades y usa números en el campo "amount" siempre que sea posible (si no hay cantidad numérica clara, pon 0 y describe en "notes"). Numera los pasos en orden empezando en 1.`;
+  if(fallbackText && fallbackText.trim()){
+    instruction += `\n\nInformación adicional del video (transcripción/descripción proporcionada por el usuario):\n${fallbackText.trim()}`;
+  }
+  if(!isYouTubeUrl(url)){
+    instruction = `No tengo acceso directo al contenido del siguiente enlace de video (${url}), así que usa principalmente la información adicional proporcionada por el usuario para reconstruir la receta lo mejor posible. Si no hay suficiente información, indícalo en el campo "summary".\n\n` + instruction;
+  }
+  parts.push({ text: instruction });
+  const recipe = await runRecipeExtraction(parts);
+  recipe.sourceUrl = url;
+  return recipe;
+}
+
+async function extractRecipeFromImage(base64Data, mimeType){
+  const instruction = `Observa esta imagen con atención. Puede ser una foto de un plato ya preparado, o una foto/captura de una receta escrita (a mano, impresa o en pantalla). Responde en ${settings.language}.
+- Si es la foto de un platillo: identifica qué plato es y reconstruye una receta completa y realista para prepararlo (ingredientes con cantidades razonables, utensilios, pasos numerados detallados, tiempos).
+- Si es una foto de un texto con una receta ya escrita: transcribe y estructura fielmente esa información en el mismo formato, sin inventar datos que no aparezcan.
+Da siempre pasos completos y claros, como si se los explicaras a alguien que nunca ha cocinado ese plato.`;
+  const parts = [
+    { inline_data: { mime_type: mimeType, data: base64Data } },
+    { text: instruction }
+  ];
+  const recipe = await runRecipeExtraction(parts);
+  recipe.sourceImage = true;
+  return recipe;
+}
+
+async function generateRecipeFromText(userPrompt){
+  const instruction = `El usuario quiere la receta de: "${userPrompt}". Genera una receta completa, realista y detallada, en ${settings.language}, incluyendo ingredientes con cantidades, utensilios necesarios, pasos numerados y bien explicados (como para alguien que nunca cocinó ese plato), tiempos estimados y consejos útiles.`;
+  const parts = [{ text: instruction }];
+  const recipe = await runRecipeExtraction(parts);
+  recipe.sourceText = userPrompt;
+  return recipe;
+}
+
+function extractTextFromResponse(data){
+  const cand = data && data.candidates && data.candidates[0];
+  if(!cand) throw new Error('Gemini no devolvió resultados. Puede que el video sea privado, muy largo, o no tenga contenido de cocina detectable.');
+  const finish = cand.finishReason;
+  if(finish === 'SAFETY') throw new Error('Gemini bloqueó la respuesta por políticas de seguridad de contenido.');
+  const parts = (cand.content && cand.content.parts) || [];
+  const textPart = parts.find(p=>p.text);
+  if(!textPart) throw new Error('Gemini no devolvió texto en la respuesta.');
+  return textPart.text;
+}
+
+async function generateDishImage(recipe){
+  const prompt = `Fotografía de comida, estilo editorial de cocina, luz natural, del siguiente plato: "${recipe.title}". ${recipe.summary || ''}. Ingredientes principales: ${recipe.ingredients.slice(0,6).map(i=>i.item).join(', ')}. Vista cenital o a 45 grados, plato servido y listo para comer, fondo simple.`;
+  const body = {
+    contents: [{ role:'user', parts:[{ text: prompt }] }],
+    generationConfig: { responseModalities: ["IMAGE","TEXT"] }
+  };
+  const data = await callGemini(settings.imageModel, body);
+  const cand = data && data.candidates && data.candidates[0];
+  const parts = (cand && cand.content && cand.content.parts) || [];
+  const imgPart = parts.find(p=>p.inlineData || p.inline_data);
+  if(!imgPart) throw new Error('El modelo de imágenes no devolvió ninguna imagen. Prueba con otro modelo de imagen en Configuración (ej. gemini-2.5-flash-image).');
+  const inline = imgPart.inlineData || imgPart.inline_data;
+  return `data:${inline.mimeType || inline.mime_type || 'image/png'};base64,${inline.data}`;
+}
+
+/* ============================= EXTRACT FLOW ============================= */
+document.getElementById('extractBtn').addEventListener('click', doExtract);
+document.getElementById('videoUrl').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doExtract(); });
+
+async function doExtract(){
+  const url = document.getElementById('videoUrl').value.trim();
+  const fallbackText = document.getElementById('fallbackText') ? document.getElementById('fallbackText').value : '';
+  document.getElementById('recipeResult').innerHTML = '';
+  if(!url){ setStatus('statusArea','error','Pega primero el enlace de un video.'); return; }
+  if(!settings.apiKey){ setStatus('statusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+
+  setStatus('statusArea','loading','Analizando el video y extrayendo la receta... esto puede tardar hasta un minuto en videos largos.');
+  document.getElementById('extractBtn').disabled = true;
+  try{
+    const recipe = await extractRecipeFromVideo(url, fallbackText);
+    currentRecipe = recipe;
+    currentImageBase64 = null;
+    clearStatus('statusArea');
+    renderRecipeCard(recipe, document.getElementById('recipeResult'), {editable:true, saved:false});
+  }catch(err){
+    setStatus('statusArea','error', err.message);
+  }finally{
+    document.getElementById('extractBtn').disabled = false;
+  }
+}
+
+/* ============================= IMAGE TAB ============================= */
+let pendingImageBase64 = null;
+let pendingImageMime = null;
+
+const imageDropzone = document.getElementById('imageDropzone');
+const recipeImageInput = document.getElementById('recipeImageInput');
+imageDropzone.addEventListener('click', ()=> recipeImageInput.click());
+imageDropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); imageDropzone.classList.add('dragover'); });
+imageDropzone.addEventListener('dragleave', ()=> imageDropzone.classList.remove('dragover'));
+imageDropzone.addEventListener('drop', (e)=>{
+  e.preventDefault(); imageDropzone.classList.remove('dragover');
+  if(e.dataTransfer.files && e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+});
+recipeImageInput.addEventListener('change', (e)=>{
+  if(e.target.files && e.target.files[0]) handleImageFile(e.target.files[0]);
+});
+
+function handleImageFile(file){
+  if(!file.type.startsWith('image/')){
+    setStatus('imageStatusArea','error','Ese archivo no es una imagen. Sube una foto en formato JPG, PNG o WEBP.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const dataUrl = reader.result;
+    pendingImageBase64 = dataUrl.split(',')[1];
+    pendingImageMime = file.type;
+    document.getElementById('imagePreview').src = dataUrl;
+    document.getElementById('imagePreview').hidden = false;
+    document.getElementById('imageDropzoneContent').hidden = true;
+    document.getElementById('extractImageBtn').disabled = false;
+    document.getElementById('clearImageBtn').hidden = false;
+    clearStatus('imageStatusArea');
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('clearImageBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  pendingImageBase64 = null; pendingImageMime = null;
+  recipeImageInput.value = '';
+  document.getElementById('imagePreview').hidden = true;
+  document.getElementById('imageDropzoneContent').hidden = false;
+  document.getElementById('extractImageBtn').disabled = true;
+  document.getElementById('clearImageBtn').hidden = true;
+  document.getElementById('imageRecipeResult').innerHTML = '';
+});
+
+document.getElementById('extractImageBtn').addEventListener('click', async ()=>{
+  if(!pendingImageBase64){ setStatus('imageStatusArea','error','Sube primero una imagen.'); return; }
+  if(!settings.apiKey){ setStatus('imageStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+  const btn = document.getElementById('extractImageBtn');
+  btn.disabled = true;
+  document.getElementById('imageRecipeResult').innerHTML = '';
+  setStatus('imageStatusArea','loading','Analizando la imagen y generando la receta...');
+  try{
+    const recipe = await extractRecipeFromImage(pendingImageBase64, pendingImageMime);
+    recipe.image = 'data:' + pendingImageMime + ';base64,' + pendingImageBase64;
+    clearStatus('imageStatusArea');
+    renderRecipeCard(recipe, document.getElementById('imageRecipeResult'), {editable:true, saved:false});
+  }catch(err){
+    setStatus('imageStatusArea','error', err.message);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+/* ============================= TEXT TAB ============================= */
+document.getElementById('generateTextBtn').addEventListener('click', doGenerateFromText);
+document.getElementById('textPrompt').addEventListener('keydown', (e)=>{ if((e.ctrlKey || e.metaKey) && e.key==='Enter') doGenerateFromText(); });
+
+async function doGenerateFromText(){
+  const prompt = document.getElementById('textPrompt').value.trim();
+  document.getElementById('textRecipeResult').innerHTML = '';
+  if(!prompt){ setStatus('textStatusArea','error','Escribe qué receta quieres, por ejemplo "pasta alfredo".'); return; }
+  if(!settings.apiKey){ setStatus('textStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+  const btn = document.getElementById('generateTextBtn');
+  btn.disabled = true;
+  setStatus('textStatusArea','loading','Generando tu receta...');
+  try{
+    const recipe = await generateRecipeFromText(prompt);
+    clearStatus('textStatusArea');
+    renderRecipeCard(recipe, document.getElementById('textRecipeResult'), {editable:true, saved:false});
+  }catch(err){
+    setStatus('textStatusArea','error', err.message);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* ============================= RECIPE CARD RENDERING ============================= */
+function fmtAmount(n){
+  if(!n) return '';
+  const rounded = Math.round(n*100)/100;
+  return (rounded % 1 === 0) ? String(rounded) : String(rounded);
+}
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
+  const scale = (recipe.servings || recipe.servings_original) / (recipe.servings_original || recipe.servings || 1);
+  const card = document.createElement('div');
+  card.className = 'recipe-card';
+  card.innerHTML = `
+    <div class="card-holes"><span></span><span></span></div>
+    <div class="card-body">
+      ${recipe.image ? `<img class="card-hero" src="${recipe.image}" alt="Foto del plato">` :
+        `<div class="card-hero-placeholder" data-role="hero-ph">Sin foto todavía — genera una con "Generar imagen del plato"</div>`}
+      <div class="card-title-row">
+        <h2>${escapeHtml(recipe.title || 'Receta sin título')}</h2>
+      </div>
+      ${recipe.summary ? `<p class="card-summary">${escapeHtml(recipe.summary)}</p>` : ''}
+      <div class="meta-strip">
+        ${recipe.total_time_minutes ? `<span class="meta-chip">⏱ ${recipe.total_time_minutes} min total</span>` : ''}
+        ${recipe.prep_time_minutes ? `<span class="meta-chip">🔪 ${recipe.prep_time_minutes} min prep.</span>` : ''}
+        ${recipe.cook_time_minutes ? `<span class="meta-chip">🔥 ${recipe.cook_time_minutes} min cocción</span>` : ''}
+        ${recipe.difficulty ? `<span class="meta-chip">📊 ${escapeHtml(recipe.difficulty)}</span>` : ''}
+        ${recipe.cuisine ? `<span class="meta-chip">🌍 ${escapeHtml(recipe.cuisine)}</span>` : ''}
+        <span class="servings-control">
+          🍽 <button class="dec" type="button">−</button>
+          <span class="serv-val">${recipe.servings}</span> porciones
+          <button class="inc" type="button">+</button>
+        </span>
+      </div>
+
+      ${(recipe.equipment && recipe.equipment.length) ? `
+      <div class="section-title">Equipo</div>
+      <div class="equip-list">${recipe.equipment.map(e=>`<span>${escapeHtml(e)}</span>`).join('')}</div>` : ''}
+
+      <div class="section-title">Ingredientes</div>
+      <ul class="ingredients">
+        ${recipe.ingredients.map((ing,i)=>`
+          <li data-i="${i}">
+            <input type="checkbox" class="ing-check">
+            <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}</label>
+          </li>`).join('')}
+      </ul>
+
+      <div class="section-title">Preparación</div>
+      <ol class="steps">
+        ${recipe.steps.map((s,i)=>`
+          <li data-i="${i}">
+            <span class="num">${s.number || (i+1)}</span>
+            <div style="flex:1;">
+              <p>${escapeHtml(s.instruction)}</p>
+              ${s.duration_minutes ? `<div class="step-timer"><input type="checkbox" class="step-check"> ⏳ ${s.duration_minutes} min</div>` : `<div class="step-timer"><input type="checkbox" class="step-check"> listo</div>`}
+            </div>
+          </li>`).join('')}
+      </ol>
+
+      ${(recipe.tips && recipe.tips.length) ? `
+      <div class="section-title">Consejos</div>
+      <div class="tips-box">${recipe.tips.map(t=>escapeHtml(t)).join('<br>')}</div>` : ''}
+
+      ${(recipe.tags && recipe.tags.length) ? `
+      <div class="section-title">Etiquetas</div>
+      <div class="tags-list">${recipe.tags.map(t=>`<span>#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+
+      <div class="card-actions">
+        <button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>
+        <button type="button" class="secondary act-save">💾 ${saved ? 'Actualizar receta' : 'Guardar receta'}</button>
+        <button type="button" class="secondary act-print">🖨 Exportar / Imprimir</button>
+        <button type="button" class="secondary act-copy">📋 Copiar como texto</button>
+        <button type="button" class="secondary act-json">⬇ Descargar JSON</button>
+        ${saved ? `<button type="button" class="danger act-delete">🗑 Eliminar</button>` : ''}
+      </div>
+      <div class="card-status"></div>
+    </div>
+  `;
+  container.innerHTML = '';
+  container.appendChild(card);
+
+  // servings +/-
+  card.querySelector('.inc').addEventListener('click', ()=>{ recipe.servings = (recipe.servings||1)+1; renderRecipeCard(recipe, container, {editable, saved, savedId}); });
+  card.querySelector('.dec').addEventListener('click', ()=>{ recipe.servings = Math.max(1,(recipe.servings||1)-1); renderRecipeCard(recipe, container, {editable, saved, savedId}); });
+
+  // generate image
+  card.querySelector('.act-image').addEventListener('click', async ()=>{
+    const statusEl = card.querySelector('.card-status');
+    statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Generando imagen del plato con IA...</div></div>`;
+    try{
+      const img = await generateDishImage(recipe);
+      recipe.image = img;
+      statusEl.innerHTML = '';
+      renderRecipeCard(recipe, container, {editable, saved, savedId});
+    }catch(err){
+      statusEl.innerHTML = `<div class="status error">⚠️<div>${escapeHtml(err.message)}</div></div>`;
+    }
+  });
+
+  // save
+  card.querySelector('.act-save').addEventListener('click', async ()=>{
+    const id = savedId || ('r_' + Date.now());
+    await storeSet('recipe:'+id, JSON.stringify(recipe));
+    const idxRaw = await storeGet('recipe-index');
+    let idx = [];
+    try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
+    if(!idx.includes(id)) idx.push(id);
+    await storeSet('recipe-index', JSON.stringify(idx));
+    savedId = id;
+    const statusEl = card.querySelector('.card-status');
+    statusEl.innerHTML = `<div class="status ok">✅<div>Receta guardada en "Mis Recetas".</div></div>`;
+    renderRecipesGrid();
+  });
+
+  // delete
+  const delBtn = card.querySelector('.act-delete');
+  if(delBtn){
+    delBtn.addEventListener('click', async ()=>{
+      if(!confirm('¿Eliminar esta receta guardada?')) return;
+      await storeDelete('recipe:'+savedId);
+      const idxRaw = await storeGet('recipe-index');
+      let idx = [];
+      try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){}
+      idx = idx.filter(x=>x!==savedId);
+      await storeSet('recipe-index', JSON.stringify(idx));
+      renderRecipesGrid();
+      container.innerHTML = '';
+    });
+  }
+
+  // print
+  card.querySelector('.act-print').addEventListener('click', ()=>{ window.print(); });
+
+  // copy as text
+  card.querySelector('.act-copy').addEventListener('click', async ()=>{
+    const text = recipeToPlainText(recipe, scale);
+    try{
+      await navigator.clipboard.writeText(text);
+      const statusEl = card.querySelector('.card-status');
+      statusEl.innerHTML = `<div class="status ok">✅<div>Receta copiada al portapapeles.</div></div>`;
+    }catch(e){
+      downloadFile((recipe.title||'receta')+'.txt', text, 'text/plain');
+    }
+  });
+
+  // download json
+  card.querySelector('.act-json').addEventListener('click', ()=>{
+    downloadFile((recipe.title||'receta')+'.json', JSON.stringify(recipe, null, 2), 'application/json');
+  });
+
+  // checklist toggles
+  card.querySelectorAll('.ing-check').forEach(cb=>{
+    cb.addEventListener('change', (e)=>{ e.target.closest('li').classList.toggle('done', e.target.checked); });
+  });
+  card.querySelectorAll('.step-check').forEach(cb=>{
+    cb.addEventListener('change', (e)=>{ e.target.closest('li').classList.toggle('done', e.target.checked); });
+  });
+
+  // editable title
+  if(editable){
+    const titleH2 = card.querySelector('.card-title-row h2');
+    titleH2.style.cursor = 'text';
+    titleH2.title = 'Haz clic para editar el título';
+    titleH2.addEventListener('click', ()=>{
+      const input = document.createElement('input');
+      input.className = 'title-edit';
+      input.value = recipe.title;
+      titleH2.replaceWith(input);
+      input.focus();
+      input.addEventListener('blur', ()=>{ recipe.title = input.value; renderRecipeCard(recipe, container, {editable, saved, savedId}); });
+      input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') input.blur(); });
+    });
+  }
+}
+
+function recipeToPlainText(recipe, scale){
+  scale = scale || 1;
+  let out = `${recipe.title}\n${'='.repeat((recipe.title||'').length)}\n\n`;
+  if(recipe.summary) out += recipe.summary + '\n\n';
+  out += `Porciones: ${recipe.servings} | Tiempo total: ${recipe.total_time_minutes||'-'} min\n\n`;
+  out += `INGREDIENTES:\n`;
+  recipe.ingredients.forEach(ing=>{ out += `- ${fmtAmount(ing.amount*scale)} ${ing.unit} ${ing.item}${ing.notes ? ' ('+ing.notes+')':''}\n`; });
+  out += `\nPREPARACIÓN:\n`;
+  recipe.steps.forEach(s=>{ out += `${s.number}. ${s.instruction}${s.duration_minutes ? ' ('+s.duration_minutes+' min)':''}\n`; });
+  if(recipe.tips && recipe.tips.length){ out += `\nCONSEJOS:\n`; recipe.tips.forEach(t=>out+=`- ${t}\n`); }
+  if(recipe.sourceUrl) out += `\nFuente: ${recipe.sourceUrl}\n`;
+  return out;
+}
+
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ============================= MY RECIPES GRID ============================= */
+async function renderRecipesGrid(){
+  const grid = document.getElementById('recipesGrid');
+  const empty = document.getElementById('emptyRecipes');
+  const idxRaw = await storeGet('recipe-index');
+  let idx = [];
+  try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
+  grid.innerHTML = '';
+  if(!idx.length){ empty.hidden = false; return; }
+  empty.hidden = true;
+  for(const id of idx){
+    const raw = await storeGet('recipe:'+id);
+    if(!raw) continue;
+    let recipe;
+    try{ recipe = JSON.parse(raw); }catch(e){ continue; }
+    const mini = document.createElement('div');
+    mini.className = 'recipe-mini';
+    mini.innerHTML = `
+      ${recipe.image ? `<img src="${recipe.image}" alt="">` : `<div class="ph">🍽</div>`}
+      <div class="mini-body">
+        <h3>${escapeHtml(recipe.title||'Sin título')}</h3>
+        <div class="mini-meta">${recipe.servings||'-'} porciones · ${recipe.total_time_minutes||'-'} min</div>
+        <div class="mini-actions"><button type="button" class="ghost">Ver →</button></div>
+      </div>`;
+    mini.addEventListener('click', ()=>{
+      document.querySelector('.tab-btn[data-tab="extract"]').click();
+      renderRecipeCard(recipe, document.getElementById('recipeResult'), {editable:true, saved:true, savedId:id});
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+    grid.appendChild(mini);
+  }
+}
+
+/* ============================= INIT ============================= */
+(async function init(){
+  await loadSettings();
+  renderRecipesGrid();
+})();
+</script>
+</body>
+</html>
