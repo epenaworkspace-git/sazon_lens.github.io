@@ -6,6 +6,8 @@
 <title>Sazón Lens — recetas desde video, foto o texto</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --ink:#241f1a;
@@ -57,6 +59,10 @@
   }
   .brand .tagline{
     font-size:12.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
+  }
+  .header-lang{
+    margin-left:auto; background:#332c24; color:var(--paper); border:1px solid #4a4032;
+    border-radius:8px; padding:5px 8px; font-size:13px; font-family:'Inter',sans-serif;
   }
   nav.tabs{
     display:flex; gap:6px; flex:1;
@@ -266,7 +272,8 @@
   footer{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:30px 0 10px 0; }
 
   @media print{
-    header.topbar, .card-actions, .url-form, #fallbackArea, .servings-edit-btn, .tab-panel:not(.printing){ display:none !important; }
+    header.topbar, .card-actions, .url-form, .chat-box-form, #fallbackArea, .dropzone, .tabs-carousel{ display:none !important; }
+    .tab-panel:not(.active){ display:none !important; }
     body{ background:#fff; }
     .recipe-card{ box-shadow:none; border:none; }
   }
@@ -278,6 +285,14 @@
   <div class="brand">
     <span class="mark">🔥 Sazón Lens</span>
     <span class="tagline">recetas desde video, foto o texto · con Gemini AI</span>
+    <select id="headerLanguage" class="header-lang">
+      <option value="español">🇪🇸 Español</option>
+      <option value="english">🇬🇧 English</option>
+      <option value="alemán">🇩🇪 Deutsch</option>
+      <option value="português">🇵🇹 Português</option>
+      <option value="français">🇫🇷 Français</option>
+      <option value="italiano">🇮🇹 Italiano</option>
+    </select>
   </div>
   <div class="tabs-carousel">
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
@@ -408,6 +423,7 @@
         <select id="language">
           <option value="español">Español</option>
           <option value="english">English</option>
+          <option value="alemán">Deutsch (Alemán)</option>
           <option value="português">Português</option>
           <option value="français">Français</option>
           <option value="italiano">Italiano</option>
@@ -511,7 +527,14 @@ async function loadSettings(){
   document.getElementById('textModel').value = settings.textModel || 'gemini-2.5-flash';
   document.getElementById('imageModel').value = settings.imageModel || 'gemini-2.5-flash-image';
   document.getElementById('language').value = settings.language || 'español';
+  document.getElementById('headerLanguage').value = settings.language || 'español';
 }
+
+document.getElementById('headerLanguage').addEventListener('change', async (e)=>{
+  settings.language = e.target.value;
+  document.getElementById('language').value = settings.language;
+  await storeSet('settings', JSON.stringify(settings));
+});
 
 document.getElementById('toggleKeyBtn').addEventListener('click', ()=>{
   const input = document.getElementById('apiKey');
@@ -525,6 +548,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
   settings.textModel = document.getElementById('textModel').value.trim() || 'gemini-2.5-flash';
   settings.imageModel = document.getElementById('imageModel').value.trim() || 'gemini-2.5-flash-image';
   settings.language = document.getElementById('language').value;
+  document.getElementById('headerLanguage').value = settings.language;
   await storeSet('settings', JSON.stringify(settings));
 
   if(!settings.apiKey){
@@ -741,7 +765,7 @@ async function extractRecipeFromVideo(url, fallbackText){
   if(isYouTubeUrl(url)){
     parts.push({ file_data: { file_uri: url } });
   }
-  let instruction = `Mira este video de cocina y extrae la receta completa. Responde en ${settings.language}. Sé preciso con cantidades y usa números en el campo "amount" siempre que sea posible (si no hay cantidad numérica clara, pon 0 y describe en "notes"). Numera los pasos en orden empezando en 1.`;
+  let instruction = `Mira este video de cocina y extrae la receta completa. IMPORTANTE: sin importar el idioma en que se hable en el video, TODO tu texto de respuesta (título, resumen, ingredientes, utensilios, pasos, consejos, etiquetas) debe estar completamente en ${settings.language}. Traduce cualquier palabra o cantidad que en el video aparezca en otro idioma. Sé preciso con cantidades y usa números en el campo "amount" siempre que sea posible (si no hay cantidad numérica clara, pon 0 y describe en "notes"). Numera los pasos en orden empezando en 1.`;
   if(fallbackText && fallbackText.trim()){
     instruction += `\n\nInformación adicional del video (transcripción/descripción proporcionada por el usuario):\n${fallbackText.trim()}`;
   }
@@ -755,9 +779,9 @@ async function extractRecipeFromVideo(url, fallbackText){
 }
 
 async function extractRecipeFromImage(base64Data, mimeType){
-  const instruction = `Observa esta imagen con atención. Puede ser una foto de un plato ya preparado, o una foto/captura de una receta escrita (a mano, impresa o en pantalla). Responde en ${settings.language}.
+  const instruction = `Observa esta imagen con atención. Puede ser una foto de un plato ya preparado, o una foto/captura de una receta escrita (a mano, impresa o en pantalla). IMPORTANTE: sin importar en qué idioma esté el texto original (si lo hay), TODO tu texto de respuesta debe estar completamente en ${settings.language} — traduce cualquier ingrediente, cantidad o paso que aparezca en otro idioma.
 - Si es la foto de un platillo: identifica qué plato es y reconstruye una receta completa y realista para prepararlo (ingredientes con cantidades razonables, utensilios, pasos numerados detallados, tiempos).
-- Si es una foto de un texto con una receta ya escrita: transcribe y estructura fielmente esa información en el mismo formato, sin inventar datos que no aparezcan.
+- Si es una foto de un texto con una receta ya escrita: transcribe y estructura fielmente esa información en el mismo formato, sin inventar datos que no aparezcan (mantén los datos originales, solo traduce el idioma).
 Da siempre pasos completos y claros, como si se los explicaras a alguien que nunca ha cocinado ese plato.`;
   const parts = [
     { inline_data: { mime_type: mimeType, data: base64Data } },
@@ -769,7 +793,7 @@ Da siempre pasos completos y claros, como si se los explicaras a alguien que nun
 }
 
 async function generateRecipeFromText(userPrompt){
-  const instruction = `El usuario quiere la receta de: "${userPrompt}". Genera una receta completa, realista y detallada, en ${settings.language}, incluyendo ingredientes con cantidades, utensilios necesarios, pasos numerados y bien explicados (como para alguien que nunca cocinó ese plato), tiempos estimados y consejos útiles.`;
+  const instruction = `El usuario quiere la receta de: "${userPrompt}". Genera una receta completa, realista y detallada, completamente en ${settings.language} (todo el texto: título, ingredientes, utensilios, pasos y consejos), incluyendo ingredientes con cantidades, utensilios necesarios, pasos numerados y bien explicados (como para alguien que nunca cocinó ese plato), tiempos estimados y consejos útiles.`;
   const parts = [{ text: instruction }];
   const recipe = await runRecipeExtraction(parts);
   recipe.sourceText = userPrompt;
@@ -789,15 +813,29 @@ function extractTextFromResponse(data){
 
 async function generateDishImage(recipe){
   const prompt = `Fotografía de comida, estilo editorial de cocina, luz natural, del siguiente plato: "${recipe.title}". ${recipe.summary || ''}. Ingredientes principales: ${recipe.ingredients.slice(0,6).map(i=>i.item).join(', ')}. Vista cenital o a 45 grados, plato servido y listo para comer, fondo simple.`;
-  const body = {
-    contents: [{ role:'user', parts:[{ text: prompt }] }],
-    generationConfig: { responseModalities: ["IMAGE","TEXT"] }
-  };
-  const data = await callGemini(settings.imageModel, body);
+  try{
+    return await tryGenerateImage({
+      contents: [{ role:'user', parts:[{ text: prompt }] }],
+      generationConfig: { responseModalities: ["IMAGE","TEXT"] }
+    });
+  }catch(firstErr){
+    // Algunos modelos/versiones no aceptan "responseModalities"; reintenta sin ese parámetro.
+    try{
+      return await tryGenerateImage({
+        contents: [{ role:'user', parts:[{ text: prompt }] }]
+      });
+    }catch(secondErr){
+      throw firstErr;
+    }
+  }
+}
+
+async function tryGenerateImage(body){
+  const data = await callGemini(settings.imageModel, body, {retry:false});
   const cand = data && data.candidates && data.candidates[0];
   const parts = (cand && cand.content && cand.content.parts) || [];
   const imgPart = parts.find(p=>p.inlineData || p.inline_data);
-  if(!imgPart) throw new Error('El modelo de imágenes no devolvió ninguna imagen. Prueba con otro modelo de imagen en Configuración (ej. gemini-2.5-flash-image).');
+  if(!imgPart) throw new Error('El modelo de imágenes no devolvió ninguna imagen. Verifica en Configuración que el modelo de imagen sea correcto para tu clave (usa "Cargar modelos disponibles" y elige uno que incluya "image" en el nombre).');
   const inline = imgPart.inlineData || imgPart.inline_data;
   return `data:${inline.mimeType || inline.mime_type || 'image/png'};base64,${inline.data}`;
 }
@@ -990,7 +1028,8 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
       <div class="card-actions">
         <button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>
         <button type="button" class="secondary act-save">💾 ${saved ? 'Actualizar receta' : 'Guardar receta'}</button>
-        <button type="button" class="secondary act-print">🖨 Exportar / Imprimir</button>
+        <button type="button" class="secondary act-print">🖨 Imprimir</button>
+        <button type="button" class="secondary act-pdf">⬇ Descargar PDF</button>
         <button type="button" class="secondary act-copy">📋 Copiar como texto</button>
         <button type="button" class="secondary act-json">⬇ Descargar JSON</button>
         ${saved ? `<button type="button" class="danger act-delete">🗑 Eliminar</button>` : ''}
@@ -1053,6 +1092,22 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
   // print
   card.querySelector('.act-print').addEventListener('click', ()=>{ window.print(); });
 
+  // download PDF directly (without print dialog)
+  card.querySelector('.act-pdf').addEventListener('click', async ()=>{
+    const statusEl = card.querySelector('.card-status');
+    const btn = card.querySelector('.act-pdf');
+    btn.disabled = true;
+    statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Generando el PDF...</div></div>`;
+    try{
+      await downloadRecipeAsPDF(card, recipe);
+      statusEl.innerHTML = `<div class="status ok">✅<div>PDF descargado.</div></div>`;
+    }catch(err){
+      statusEl.innerHTML = `<div class="status error">⚠️<div>No se pudo generar el PDF: ${escapeHtml(err.message)}</div></div>`;
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
   // copy as text
   card.querySelector('.act-copy').addEventListener('click', async ()=>{
     const text = recipeToPlainText(recipe, scale);
@@ -1107,6 +1162,49 @@ function recipeToPlainText(recipe, scale){
   if(recipe.tips && recipe.tips.length){ out += `\nCONSEJOS:\n`; recipe.tips.forEach(t=>out+=`- ${t}\n`); }
   if(recipe.sourceUrl) out += `\nFuente: ${recipe.sourceUrl}\n`;
   return out;
+}
+
+async function downloadRecipeAsPDF(card, recipe){
+  if(typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined'){
+    throw new Error('No se pudieron cargar las librerías de PDF (revisa tu conexión a internet e intenta de nuevo).');
+  }
+  const actionsEl = card.querySelector('.card-actions');
+  const statusElNode = card.querySelector('.card-status');
+  const holesEl = card.querySelector('.card-holes');
+  const prevActionsDisplay = actionsEl.style.display;
+  const prevStatusDisplay = statusElNode.style.display;
+  const prevHolesDisplay = holesEl ? holesEl.style.display : null;
+  actionsEl.style.display = 'none';
+  statusElNode.style.display = 'none';
+  if(holesEl) holesEl.style.display = 'none';
+
+  try{
+    const canvas = await html2canvas(card, { scale:2, backgroundColor:'#f7f2e6', useCORS:true });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    const safeName = (recipe.title || 'receta').replace(/[^\w\- ]/g,'').trim() || 'receta';
+    pdf.save(safeName + '.pdf');
+  } finally {
+    actionsEl.style.display = prevActionsDisplay;
+    statusElNode.style.display = prevStatusDisplay;
+    if(holesEl) holesEl.style.display = prevHolesDisplay;
+  }
 }
 
 function downloadFile(filename, content, mime){
