@@ -26,6 +26,7 @@
     --radius: 14px;
   }
   *{box-sizing:border-box;}
+  [hidden]{ display:none !important; }
   html,body{margin:0;padding:0;}
   body{
     background:var(--paper);
@@ -135,6 +136,31 @@
   .plan-meal-cal{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent-dark); white-space:nowrap; }
   .plan-meal-recipe-btn{ background:transparent; color:var(--herb-dark); border:1px solid var(--herb); border-radius:8px; padding:4px 10px; font-size:12px; margin-top:6px; }
   .plan-tips{ background:#f4ecd7; border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 8px 8px 0; font-size:14px; margin-top:14px; }
+
+  /* ---------- Registro rápido / nutrición ---------- */
+  .nutrition-card{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:22px; margin-top:18px;
+  }
+  .nutrition-cal-big{ display:flex; align-items:baseline; gap:8px; margin:10px 0 18px 0; }
+  .nutrition-cal-big .num{ font-family:'Fraunces',serif; font-weight:900; font-size:42px; color:var(--accent-dark); }
+  .nutrition-bar-row{ display:grid; grid-template-columns:90px 1fr 60px; align-items:center; gap:10px; margin-bottom:10px; font-size:13.5px; }
+  .nutrition-bar-track{ height:9px; background:var(--paper-dark); border-radius:6px; overflow:hidden; }
+  .nutrition-bar-fill{ height:100%; border-radius:6px; }
+  .nutrition-bar-fill.protein{ background:var(--herb); }
+  .nutrition-bar-fill.carbs{ background:var(--accent); }
+  .nutrition-bar-fill.fat{ background:var(--rust); }
+  .nutrition-extra{ margin-top:14px; font-size:13.5px; color:var(--ink-soft); line-height:1.5; }
+  .shopping-list{ display:grid; gap:14px; margin-top:14px; }
+  .shopping-aisle{ background:#fffdf8; border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .shopping-aisle h4{ font-family:'Fraunces',serif; color:var(--herb-dark); margin:0 0 8px 0; font-size:15px; }
+  .shopping-aisle label{ display:flex; gap:8px; align-items:center; padding:3px 0; font-size:13.5px; }
+  .shopping-aisle label.done{ text-decoration:line-through; opacity:.5; }
+  .ing-sub-btn{ background:none; border:none; color:var(--herb-dark); font-size:12px; cursor:pointer; padding:2px 4px; }
+  .ing-sub-note{ font-size:12px; color:var(--ink-soft); margin-top:4px; padding-left:2px; }
+  .checkin-box{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-top:20px; }
+  .checkin-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .checkin-row input, .checkin-row select{ flex:1; min-width:140px; }
 
   /* ---------- Chat flotante ---------- */
   #chatFab{
@@ -435,6 +461,7 @@
       <button class="tab-btn active" data-tab="extract">Desde Video</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
+      <button class="tab-btn" data-tab="quickLog">Registro Rápido</button>
       <button class="tab-btn" data-tab="mealplan">Plan Nutricional</button>
       <button class="tab-btn" data-tab="myrecipes">Mis Recetas</button>
       <button class="tab-btn" data-tab="settings">Configuración</button>
@@ -502,6 +529,27 @@
     <div id="textRecipeResult"></div>
   </section>
 
+  <!-- QUICK LOG TAB -->
+  <section id="tab-quickLog" class="tab-panel">
+    <div class="intro">
+      <p>Sube una foto de tu plato y la IA calcula automáticamente las calorías y los nutrientes aproximados — ideal para llevar un registro rápido sin tener que pesar ni anotar nada.</p>
+    </div>
+    <div class="dropzone" id="logDropzone">
+      <input type="file" id="logImageInput" accept="image/*" hidden>
+      <div id="logDropzoneContent">
+        <span style="font-size:34px;">🍽</span>
+        <p><strong>Haz clic para subir una foto de tu plato</strong><br>o arrástrala aquí</p>
+      </div>
+      <img id="logImagePreview" hidden>
+    </div>
+    <div class="url-form" style="margin-top:12px;">
+      <button id="analyzeLogBtn" disabled>Calcular valores nutricionales</button>
+      <button class="secondary" id="clearLogImageBtn" type="button" hidden>Quitar imagen</button>
+    </div>
+    <div id="logStatusArea"></div>
+    <div id="logResult"></div>
+  </section>
+
   <!-- MEAL PLAN TAB -->
   <section id="tab-mealplan" class="tab-panel">
     <div class="intro">
@@ -514,8 +562,30 @@
         <div class="chip-group" id="goalGroup">
           <button type="button" class="chip-btn active" data-value="bajar de peso">🔥 Bajar de peso</button>
           <button type="button" class="chip-btn" data-value="ganar masa muscular">💪 Ganar músculo</button>
+          <button type="button" class="chip-btn" data-value="recomposición corporal (bajar grasa sin perder músculo)">🎯 Recomposición corporal</button>
+          <button type="button" class="chip-btn" data-value="rendimiento deportivo">🏃 Rendimiento deportivo</button>
+          <button type="button" class="chip-btn" data-value="ayuno intermitente">⏳ Ayuno intermitente</button>
           <button type="button" class="chip-btn" data-value="alimentación saludable">🥗 Comer más sano</button>
           <button type="button" class="chip-btn" data-value="mantenimiento">⚖️ Mantenimiento</button>
+          <button type="button" class="chip-btn" data-value="etapa especial (embarazo, lactancia, menopausia o tercera edad)">🌱 Etapa especial</button>
+          <button type="button" class="chip-btn" data-value="control médico (diabetes, hipertensión, colesterol o digestivo)">🩺 Control médico</button>
+        </div>
+      </div>
+
+      <div class="field" id="medicalDisclaimer" hidden>
+        <div class="status info" style="margin:0;">ℹ️<div>Este plan es solo orientativo y no sustituye la consulta con un médico o nutriólogo. Para embarazo, lactancia, o condiciones médicas como diabetes o hipertensión, es importante que un profesional de la salud supervise tu alimentación.</div></div>
+      </div>
+
+      <div class="field">
+        <label>Tipo de dieta (opcional)</label>
+        <div class="chip-group" id="dietTypeGroup">
+          <button type="button" class="chip-btn active" data-value="">Sin preferencia</button>
+          <button type="button" class="chip-btn" data-value="keto / baja en carbohidratos">Keto / baja en carbos</button>
+          <button type="button" class="chip-btn" data-value="mediterránea">Mediterránea</button>
+          <button type="button" class="chip-btn" data-value="vegetariana">Vegetariana</button>
+          <button type="button" class="chip-btn" data-value="vegana">Vegana</button>
+          <button type="button" class="chip-btn" data-value="sin lactosa">Sin lactosa</button>
+          <button type="button" class="chip-btn" data-value="sin gluten">Sin gluten</button>
         </div>
       </div>
 
@@ -531,8 +601,13 @@
       </div>
 
       <div class="field">
-        <label>Restricciones o preferencias (opcional)</label>
-        <input type="text" id="planRestrictions" placeholder="Ej: vegetariano, sin gluten, no me gusta el pescado...">
+        <label>Actividad física o deporte (opcional)</label>
+        <input type="text" id="planActivity" placeholder="Ej: ciclismo 3 veces por semana, gimnasio, running...">
+      </div>
+
+      <div class="field">
+        <label>Restricciones o preferencias adicionales (opcional)</label>
+        <input type="text" id="planRestrictions" placeholder="Ej: no me gusta el pescado, soy alérgico a los mariscos...">
       </div>
 
       <button id="generatePlanBtn">Generar mi plan semanal</button>
@@ -999,12 +1074,24 @@ const RECIPE_SCHEMA = {
       }
     },
     tips: { type: "ARRAY", items: { type: "STRING" } },
-    tags: { type: "ARRAY", items: { type: "STRING" } }
+    tags: { type: "ARRAY", items: { type: "STRING" } },
+    nutrition: {
+      type: "OBJECT",
+      properties: {
+        calories_per_serving: { type: "NUMBER" },
+        protein_g: { type: "NUMBER" },
+        carbs_g: { type: "NUMBER" },
+        fat_g: { type: "NUMBER" },
+        fiber_g: { type: "NUMBER" },
+        vitamins_minerals: { type: "ARRAY", items: { type: "STRING" } }
+      }
+    }
   },
   required: ["title","ingredients","steps"]
 };
 
 async function runRecipeExtraction(parts){
+  parts = parts.concat([{ text: 'Además, estima en el campo "nutrition" la información nutricional aproximada por porción: calorías, proteína, carbohidratos, grasa y fibra en gramos, y 2-3 vitaminas o minerales relevantes que aporte la receta.' }]);
   const body = {
     contents: [{ role:'user', parts }],
     generationConfig: {
@@ -1224,9 +1311,131 @@ async function doGenerateFromText(){
   }
 }
 
+/* ============================= QUICK LOG TAB (registro rápido) ============================= */
+let pendingLogImageBase64 = null;
+let pendingLogImageMime = null;
+
+const logDropzone = document.getElementById('logDropzone');
+const logImageInput = document.getElementById('logImageInput');
+logDropzone.addEventListener('click', ()=> logImageInput.click());
+logDropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); logDropzone.classList.add('dragover'); });
+logDropzone.addEventListener('dragleave', ()=> logDropzone.classList.remove('dragover'));
+logDropzone.addEventListener('drop', (e)=>{
+  e.preventDefault(); logDropzone.classList.remove('dragover');
+  if(e.dataTransfer.files && e.dataTransfer.files[0]) handleLogImageFile(e.dataTransfer.files[0]);
+});
+logImageInput.addEventListener('change', (e)=>{
+  if(e.target.files && e.target.files[0]) handleLogImageFile(e.target.files[0]);
+});
+
+function handleLogImageFile(file){
+  if(!file.type.startsWith('image/')){
+    setStatus('logStatusArea','error','Ese archivo no es una imagen. Sube una foto en formato JPG, PNG o WEBP.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const dataUrl = reader.result;
+    pendingLogImageBase64 = dataUrl.split(',')[1];
+    pendingLogImageMime = file.type;
+    document.getElementById('logImagePreview').src = dataUrl;
+    document.getElementById('logImagePreview').hidden = false;
+    document.getElementById('logDropzoneContent').hidden = true;
+    document.getElementById('analyzeLogBtn').disabled = false;
+    document.getElementById('clearLogImageBtn').hidden = false;
+    clearStatus('logStatusArea');
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('clearLogImageBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  pendingLogImageBase64 = null; pendingLogImageMime = null;
+  logImageInput.value = '';
+  document.getElementById('logImagePreview').hidden = true;
+  document.getElementById('logDropzoneContent').hidden = false;
+  document.getElementById('analyzeLogBtn').disabled = true;
+  document.getElementById('clearLogImageBtn').hidden = true;
+  document.getElementById('logResult').innerHTML = '';
+});
+
+const QUICK_LOG_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    dish_name: { type: "STRING" },
+    portion_description: { type: "STRING" },
+    calories: { type: "NUMBER" },
+    protein_g: { type: "NUMBER" },
+    carbs_g: { type: "NUMBER" },
+    fat_g: { type: "NUMBER" },
+    fiber_g: { type: "NUMBER" },
+    vitamins_minerals: { type: "ARRAY", items: { type: "STRING" } },
+    confidence_note: { type: "STRING" }
+  },
+  required: ["dish_name","calories"]
+};
+
+document.getElementById('analyzeLogBtn').addEventListener('click', async ()=>{
+  if(!pendingLogImageBase64){ setStatus('logStatusArea','error','Sube primero una foto de tu plato.'); return; }
+  if(!settings.apiKey){ setStatus('logStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+  const btn = document.getElementById('analyzeLogBtn');
+  btn.disabled = true;
+  document.getElementById('logResult').innerHTML = '';
+  setStatus('logStatusArea','loading','Calculando valores nutricionales...');
+  try{
+    const instruction = `Observa esta foto de un plato de comida y estima: qué platillo es, el tamaño de la porción que se ve, y sus valores nutricionales aproximados (calorías, proteína, carbohidratos, grasa y fibra en gramos), además de 2-3 vitaminas o minerales relevantes que aporte. Sé realista con las estimaciones basándote en el tamaño visual de la porción. Agrega una nota breve aclarando que es una estimación visual aproximada, no una medición exacta. Responde en ${settings.language}.`;
+    const body = {
+      contents: [{ role:'user', parts:[{ inline_data:{ mime_type: pendingLogImageMime, data: pendingLogImageBase64 } }, { text: instruction }] }],
+      generationConfig: { responseMimeType:'application/json', responseSchema: QUICK_LOG_SCHEMA, temperature:0.3 }
+    };
+    const data = await callGemini(settings.textModel, body);
+    const result = JSON.parse(extractTextFromResponse(data));
+    clearStatus('logStatusArea');
+    renderQuickLog(result, 'data:'+pendingLogImageMime+';base64,'+pendingLogImageBase64);
+  }catch(err){
+    setStatus('logStatusArea','error', err.message);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+function macroBar(label, grams, cls, maxRef){
+  if(grams == null) return '';
+  const pct = Math.max(4, Math.min(100, Math.round((grams / maxRef) * 100)));
+  return `
+    <div class="nutrition-bar-row">
+      <span>${label}</span>
+      <div class="nutrition-bar-track"><div class="nutrition-bar-fill ${cls}" style="width:${pct}%;"></div></div>
+      <span class="mono">${grams} g</span>
+    </div>`;
+}
+
+function renderQuickLog(result, imageDataUrl){
+  const container = document.getElementById('logResult');
+  const card = document.createElement('div');
+  card.className = 'nutrition-card';
+  card.innerHTML = `
+    ${imageDataUrl ? `<img class="card-hero" src="${imageDataUrl}" alt="Foto del plato" style="max-height:220px;">` : ''}
+    <h2 style="font-size:22px; margin-top:12px;">${escapeHtml(result.dish_name||'Plato analizado')}</h2>
+    ${result.portion_description ? `<p class="card-summary">${escapeHtml(result.portion_description)}</p>` : ''}
+    <div class="nutrition-cal-big"><span class="num">${result.calories||'—'}</span><span>kcal estimadas</span></div>
+    ${macroBar('Proteína', result.protein_g, 'protein', 60)}
+    ${macroBar('Carbohidratos', result.carbs_g, 'carbs', 100)}
+    ${macroBar('Grasa', result.fat_g, 'fat', 50)}
+    ${result.fiber_g ? `<div class="nutrition-extra"><strong>Fibra:</strong> ${result.fiber_g} g</div>` : ''}
+    ${(result.vitamins_minerals && result.vitamins_minerals.length) ? `<div class="nutrition-extra"><strong>Aporta:</strong> ${result.vitamins_minerals.map(v=>escapeHtml(v)).join(', ')}</div>` : ''}
+    ${result.confidence_note ? `<div class="nutrition-extra" style="margin-top:10px; font-style:italic;">${escapeHtml(result.confidence_note)}</div>` : ''}
+  `;
+  container.innerHTML = '';
+  container.appendChild(card);
+}
+
 /* ============================= MEAL PLAN TAB ============================= */
 let selectedGoal = 'bajar de peso';
 let selectedDuration = 'auto';
+let selectedDietType = '';
+let lastGeneratedPlan = null;
+const MEDICAL_GOAL_KEYWORDS = ['etapa especial', 'control médico'];
 
 function setupChipGroup(groupId, onSelect){
   const group = document.getElementById(groupId);
@@ -1238,8 +1447,13 @@ function setupChipGroup(groupId, onSelect){
     });
   });
 }
-setupChipGroup('goalGroup', v=> selectedGoal = v);
+setupChipGroup('goalGroup', v=>{
+  selectedGoal = v;
+  const isMedical = MEDICAL_GOAL_KEYWORDS.some(k=> v.startsWith(k.split(' ')[0]) || v.includes('embarazo') || v.includes('diabetes') || v.includes('médico') || v.includes('especial'));
+  document.getElementById('medicalDisclaimer').hidden = !isMedical;
+});
 setupChipGroup('durationGroup', v=> selectedDuration = v);
+setupChipGroup('dietTypeGroup', v=> selectedDietType = v);
 
 const MEAL_PLAN_SCHEMA = {
   type: "OBJECT",
@@ -1271,6 +1485,7 @@ const MEAL_PLAN_SCHEMA = {
 
 document.getElementById('generatePlanBtn').addEventListener('click', async ()=>{
   const restrictions = document.getElementById('planRestrictions').value.trim();
+  const activity = document.getElementById('planActivity').value.trim();
   const btn = document.getElementById('generatePlanBtn');
   document.getElementById('planResult').innerHTML = '';
   if(!settings.apiKey){ setStatus('planStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
@@ -1283,7 +1498,15 @@ document.getElementById('generatePlanBtn').addEventListener('click', async ()=>{
     if(selectedDuration === 'mensual') durationText = 'el usuario quiere seguirlo 4 semanas (repitiendo esta misma semana como base)';
     if(selectedDuration === 'trimestral') durationText = 'el usuario quiere seguirlo 12 semanas (repitiendo esta misma semana como base, con variaciones si es posible)';
 
-    const instruction = `Crea un plan de alimentación de 7 días (lunes a domingo) con desayuno, comida, cena y una colación (snack), pensado para el objetivo: "${selectedGoal}". Sobre la duración: ${durationText}. Indica en "recommended_duration_weeks" y "duration_explanation" cuántas semanas recomiendas sostener este plan y por qué, pensando en salud y sostenibilidad (no recomiendes dietas extremas). Da un estimado de calorías diarias objetivo y macros (proteína, carbohidratos, grasas en gramos) razonables para ese objetivo en una persona adulta promedio. ${restrictions ? `Restricciones/preferencias del usuario: ${restrictions}.` : ''} Cada comida debe tener título, calorías aproximadas y una descripción breve (1-2 líneas). Agrega también 3-4 consejos generales. Responde completamente en ${settings.language}.`;
+    const isMedical = !document.getElementById('medicalDisclaimer').hidden;
+    const safetyNote = isMedical
+      ? ' IMPORTANTE: el objetivo elegido está relacionado con una condición médica o etapa especial (embarazo, lactancia, menopausia, tercera edad, diabetes, hipertensión, colesterol o digestivo). Da recomendaciones generales, conservadoras y seguras, evita cualquier indicación que pudiera ser riesgosa sin supervisión médica, y en "duration_explanation" recuerda explícitamente que este plan es orientativo y debe supervisarlo un profesional de la salud.'
+      : '';
+    const ifIntermittent = selectedGoal.includes('ayuno intermitente')
+      ? ' Organiza los horarios de las comidas dentro de una ventana de alimentación razonable (por ejemplo 16:8) y menciónalo en "goal_summary".'
+      : '';
+
+    const instruction = `Crea un plan de alimentación de 7 días (lunes a domingo) con desayuno, comida, cena y una colación (snack), pensado para el objetivo: "${selectedGoal}". Sobre la duración: ${durationText}.${ifIntermittent} Indica en "recommended_duration_weeks" y "duration_explanation" cuántas semanas recomiendas sostener este plan y por qué, pensando en salud y sostenibilidad (no recomiendes dietas extremas). Da un estimado de calorías diarias objetivo y macros (proteína, carbohidratos, grasas en gramos) razonables para ese objetivo en una persona adulta promedio.${safetyNote} ${selectedDietType ? `Tipo de dieta a seguir: ${selectedDietType}.` : ''} ${activity ? `Actividad física del usuario: ${activity} — ajusta calorías y proteína considerando este nivel de actividad.` : ''} ${restrictions ? `Restricciones/preferencias adicionales: ${restrictions}.` : ''} Cada comida debe tener título, calorías aproximadas y una descripción breve (1-2 líneas). Agrega también 3-4 consejos generales. Responde completamente en ${settings.language}.`;
 
     const body = {
       contents: [{ role:'user', parts:[{text: instruction}] }],
@@ -1316,6 +1539,7 @@ function mealRow(label, meal){
 }
 
 function renderMealPlan(plan){
+  lastGeneratedPlan = plan;
   const container = document.getElementById('planResult');
   const wrap = document.createElement('div');
   wrap.className = 'plan-summary';
@@ -1340,12 +1564,18 @@ function renderMealPlan(plan){
         </div>`).join('')}
     </div>
     ${(plan.general_tips && plan.general_tips.length) ? `<div class="plan-tips">${plan.general_tips.map(t=>escapeHtml(t)).join('<br>')}</div>` : ''}
+    <div class="card-actions" style="margin-top:18px;">
+      <button type="button" class="secondary" id="genShoppingListBtn">🛒 Generar lista de compras</button>
+    </div>
   `;
   container.innerHTML = '';
   const recipeSlot = document.createElement('div');
   recipeSlot.id = 'planRecipeSlot';
   container.appendChild(recipeSlot);
   container.appendChild(wrap);
+  container.appendChild(buildCheckinBox());
+
+  document.getElementById('genShoppingListBtn').addEventListener('click', generateShoppingList);
 
   wrap.querySelectorAll('.plan-meal-recipe-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
@@ -1365,6 +1595,135 @@ function renderMealPlan(plan){
       }
     });
   });
+}
+
+/* ---- Lista de compras automática ---- */
+const SHOPPING_LIST_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    aisles: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          aisle_name: { type: "STRING" },
+          items: { type: "ARRAY", items: { type: "OBJECT", properties: { item:{type:"STRING"}, approx_amount:{type:"STRING"} }, required:["item"] } }
+        }
+      }
+    }
+  },
+  required: ["aisles"]
+};
+
+async function generateShoppingList(){
+  if(!lastGeneratedPlan) return;
+  const btn = document.getElementById('genShoppingListBtn');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Generando lista...';
+  const mealsFlat = (lastGeneratedPlan.days||[]).flatMap(d=>[d.breakfast,d.lunch,d.dinner,d.snack]).filter(Boolean).map(m=>`${m.title}: ${m.description||''}`).join('\n');
+  try{
+    const instruction = `A partir de estas comidas de un plan semanal, genera una lista de compras consolidada (sin duplicar ingredientes repetidos, sumando cantidades aproximadas cuando aplique), organizada por pasillos típicos de supermercado (ej. Frutas y Verduras, Carnes y Pescados, Lácteos y Huevos, Abarrotes y Despensa, Panadería, Congelados, Otros). Responde en ${settings.language}.\n\nComidas:\n${mealsFlat}`;
+    const body = { contents:[{role:'user', parts:[{text:instruction}]}], generationConfig:{ responseMimeType:'application/json', responseSchema: SHOPPING_LIST_SCHEMA, temperature:0.3 } };
+    const data = await callGemini(settings.textModel, body);
+    const list = JSON.parse(extractTextFromResponse(data));
+    renderShoppingList(list);
+  }catch(err){
+    alert('No se pudo generar la lista de compras: ' + err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+function renderShoppingList(list){
+  const existing = document.getElementById('shoppingListBox');
+  if(existing) existing.remove();
+  const box = document.createElement('div');
+  box.id = 'shoppingListBox';
+  box.className = 'plan-summary';
+  box.innerHTML = `
+    <h2 style="font-size:18px;">🛒 Lista de compras</h2>
+    <div class="shopping-list">
+      ${(list.aisles||[]).map(aisle=>`
+        <div class="shopping-aisle">
+          <h4>${escapeHtml(aisle.aisle_name||'')}</h4>
+          ${(aisle.items||[]).map(it=>`
+            <label><input type="checkbox" class="shop-check"> ${escapeHtml(it.item)}${it.approx_amount ? ` — <span class="mono">${escapeHtml(it.approx_amount)}</span>`:''}</label>
+          `).join('')}
+        </div>`).join('')}
+    </div>
+    <div class="card-actions">
+      <button type="button" class="secondary" id="copyShoppingListBtn">📋 Copiar lista</button>
+    </div>
+  `;
+  document.getElementById('planResult').appendChild(box);
+  box.querySelectorAll('.shop-check').forEach(cb=>{
+    cb.addEventListener('change', e=> e.target.closest('label').classList.toggle('done', e.target.checked));
+  });
+  document.getElementById('copyShoppingListBtn').addEventListener('click', async ()=>{
+    let text = 'Lista de compras\n\n';
+    (list.aisles||[]).forEach(aisle=>{
+      text += `${aisle.aisle_name}\n`;
+      (aisle.items||[]).forEach(it=>{ text += `- ${it.item}${it.approx_amount ? ' ('+it.approx_amount+')':''}\n`; });
+      text += '\n';
+    });
+    try{ await navigator.clipboard.writeText(text); alert('Lista copiada al portapapeles.'); }
+    catch(e){ downloadFile('lista-de-compras.txt', text, 'text/plain'); }
+  });
+}
+
+/* ---- Seguimiento semanal ---- */
+function buildCheckinBox(){
+  const box = document.createElement('div');
+  box.className = 'checkin-box';
+  box.innerHTML = `
+    <h3 style="font-size:16px;">📈 ¿Cómo te fue esta semana?</h3>
+    <p class="card-summary" style="margin:4px 0 0 0;">Cuéntame cómo te fue y te ajusto el plan de la próxima semana.</p>
+    <div class="checkin-row">
+      <select id="checkinEnergy">
+        <option value="">Nivel de energía (opcional)</option>
+        <option value="muy baja">Muy baja</option>
+        <option value="baja">Baja</option>
+        <option value="normal">Normal</option>
+        <option value="alta">Alta</option>
+      </select>
+      <input type="text" id="checkinWeightChange" placeholder="Cambio de peso (opcional, ej: -0.5 kg)">
+    </div>
+    <div class="checkin-row">
+      <input type="text" id="checkinNotes" placeholder="Notas: ¿algo te costó, se te antojó, te sobró tiempo o no?" style="flex:1;">
+    </div>
+    <div class="card-actions">
+      <button type="button" id="checkinAdjustBtn">Ajustar mi plan para la próxima semana</button>
+    </div>
+    <div id="checkinStatusArea"></div>
+  `;
+  box.querySelector('#checkinAdjustBtn').addEventListener('click', doWeeklyCheckin);
+  return box;
+}
+
+async function doWeeklyCheckin(){
+  if(!lastGeneratedPlan) return;
+  const energy = document.getElementById('checkinEnergy').value;
+  const weightChange = document.getElementById('checkinWeightChange').value.trim();
+  const notes = document.getElementById('checkinNotes').value.trim();
+  const btn = document.getElementById('checkinAdjustBtn');
+  btn.disabled = true;
+  setStatus('checkinStatusArea','loading','Ajustando tu plan según tu semana...');
+  try{
+    const feedback = `Nivel de energía reportado: ${energy||'no especificado'}. Cambio de peso: ${weightChange||'no especificado'}. Notas del usuario: ${notes||'ninguna'}.`;
+    const instruction = `Este fue el plan semanal anterior del usuario (objetivo: "${selectedGoal}"):\n${JSON.stringify(lastGeneratedPlan.days)}\n\nRetroalimentación del usuario sobre cómo le fue: ${feedback}\n\nCrea un plan ajustado para la próxima semana (mismo formato de 7 días con desayuno, comida, cena y snack), con pequeños ajustes razonables basados en esta retroalimentación (por ejemplo, si la energía fue baja, considera más calorías o mejor distribución; si hubo antojos, incluye opciones que los controlen; si algo fue difícil de preparar, simplifícalo). Explica brevemente en "goal_summary" qué cambiaste y por qué. Responde en ${settings.language}.`;
+    const body = { contents:[{role:'user', parts:[{text:instruction}]}], generationConfig:{ responseMimeType:'application/json', responseSchema: MEAL_PLAN_SCHEMA, temperature:0.5 } };
+    const data = await callGemini(settings.textModel, body);
+    const newPlan = JSON.parse(extractTextFromResponse(data));
+    clearStatus('checkinStatusArea');
+    renderMealPlan(newPlan);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    setStatus('checkinStatusArea','error', err.message);
+  }finally{
+    btn.disabled = false;
+  }
 }
 
 /* ============================= FLOATING CHAT ============================= */
@@ -1466,12 +1825,24 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
       <div class="section-title">Equipo</div>
       <div class="equip-list">${recipe.equipment.map(e=>`<span>${escapeHtml(e)}</span>`).join('')}</div>` : ''}
 
+      ${(recipe.nutrition && recipe.nutrition.calories_per_serving) ? `
+      <div class="section-title">Nutrición (por porción)</div>
+      <div class="nutrition-cal-big" style="margin:4px 0 10px 0;"><span class="num" style="font-size:28px;">${recipe.nutrition.calories_per_serving}</span><span>kcal</span></div>
+      ${macroBar('Proteína', recipe.nutrition.protein_g, 'protein', 60)}
+      ${macroBar('Carbohidratos', recipe.nutrition.carbs_g, 'carbs', 100)}
+      ${macroBar('Grasa', recipe.nutrition.fat_g, 'fat', 50)}
+      ${(recipe.nutrition.vitamins_minerals && recipe.nutrition.vitamins_minerals.length) ? `<div class="nutrition-extra"><strong>Aporta:</strong> ${recipe.nutrition.vitamins_minerals.map(v=>escapeHtml(v)).join(', ')}</div>` : ''}
+      ` : ''}
+
       <div class="section-title">Ingredientes</div>
       <ul class="ingredients">
         ${recipe.ingredients.map((ing,i)=>`
           <li data-i="${i}">
             <input type="checkbox" class="ing-check">
-            <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}</label>
+            <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}
+              <button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>
+              <div class="ing-sub-note" hidden></div>
+            </label>
           </li>`).join('')}
       </ul>
 
@@ -1601,6 +1972,31 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
   });
   card.querySelectorAll('.step-check').forEach(cb=>{
     cb.addEventListener('change', (e)=>{ e.target.closest('li').classList.toggle('done', e.target.checked); });
+  });
+
+  // sustituciones inteligentes
+  card.querySelectorAll('.ing-sub-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const noteEl = btn.nextElementSibling;
+      if(!settings.apiKey){ noteEl.hidden=false; noteEl.textContent='Falta tu clave de API de Gemini (ve a Configuración).'; return; }
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Buscando...';
+      noteEl.hidden = false;
+      noteEl.textContent = 'Buscando sustitutos con nutrientes similares...';
+      try{
+        const instruction = `Dame 2 o 3 sustitutos para el ingrediente "${btn.dataset.ingredient}" dentro de la receta "${recipe.title}", que tengan calorías y nutrientes similares. Responde en una sola línea breve, separando las opciones con " · ", en ${settings.language}. No agregues explicación extra, solo las opciones.`;
+        const body = { contents:[{role:'user', parts:[{text:instruction}]}] };
+        const data = await callGemini(settings.textModel, body, {retry:false});
+        const reply = extractTextFromResponse(data);
+        noteEl.textContent = '🔄 ' + reply.trim();
+      }catch(err){
+        noteEl.textContent = '⚠️ ' + err.message;
+      }finally{
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
   });
 
   // editable title
