@@ -17,17 +17,31 @@
     --paper-card:#f7f2e6;
     --accent:#c98a1f;
     --accent-dark:#a06e17;
+    --accent-light:#e3ab48;
     --herb:#4b6b4f;
     --herb-dark:#37502f;
+    --herb-light:#6d9270;
     --rust:#a63d33;
     --rust-bg:#f3e0dc;
-    --line: rgba(36,31,26,.18);
-    --shadow: 0 10px 30px rgba(36,31,26,.16);
-    --radius: 14px;
+    --line: rgba(36,31,26,.14);
+    --shadow: 0 2px 6px rgba(36,31,26,.06), 0 14px 34px -10px rgba(36,31,26,.22);
+    --shadow-lift: 0 6px 14px rgba(36,31,26,.10), 0 24px 48px -14px rgba(36,31,26,.30);
+    --shadow-sm: 0 1px 2px rgba(36,31,26,.08), 0 4px 10px rgba(36,31,26,.10);
+    --radius: 18px;
+    --radius-sm: 11px;
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
   }
   *{box-sizing:border-box;}
   [hidden]{ display:none !important; }
   html,body{margin:0;padding:0;}
+  html{ scrollbar-color: var(--accent) transparent; }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:rgba(36,31,26,.22); border-radius:20px; border:2px solid transparent; background-clip:padding-box; }
+  ::-webkit-scrollbar-thumb:hover{ background:rgba(201,138,31,.55); background-clip:padding-box; }
   body{
     background:var(--paper);
     background-image:
@@ -36,6 +50,7 @@
     color:var(--ink);
     font-family:'Inter',system-ui,sans-serif;
     min-height:100vh;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
   h1,h2,h3,.display{
     font-family:'Fraunces',serif;
@@ -47,16 +62,32 @@
 
   /* ---------- Top bar ---------- */
   header.topbar{
-    background:var(--ink);
+    background:linear-gradient(180deg, var(--ink) 0%, #2b241d 100%);
     color:var(--paper);
     padding:18px 24px 0 24px;
     position:sticky; top:0; z-index:40;
+    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 14px 30px -14px rgba(0,0,0,.5);
   }
   .brand{
-    display:flex; align-items:baseline; gap:10px; margin-bottom:14px;
+    display:flex; align-items:center; gap:10px; margin-bottom:14px;
   }
   .brand .mark{
-    font-family:'Fraunces',serif; font-weight:900; font-size:26px; color:var(--accent);
+    font-family:'Fraunces',serif; font-weight:900; font-size:26px;
+    display:flex; align-items:center; gap:8px;
+    color:var(--accent);
+    background:linear-gradient(95deg, var(--accent-light), var(--accent) 55%, var(--accent-dark));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .flame-icon{ width:24px; height:32px; flex-shrink:0; overflow:visible; }
+  .flame-icon .flame-outer{ transform-box:fill-box; transform-origin:50% 100%; animation:flameSway 2.6s ease-in-out infinite; }
+  .flame-icon .flame-inner{ transform-box:fill-box; transform-origin:50% 100%; animation:flameSway 1.7s ease-in-out infinite reverse; }
+  .flame-icon .fo1{ fill:var(--accent-dark); }
+  .flame-icon .fo2{ fill:var(--accent-light); }
+  .flame-icon .fi1{ fill:var(--paper-card); }
+  @keyframes flameSway{
+    0%,100%{ transform:rotate(-4deg) scaleY(1) scaleX(1); }
+    35%{ transform:rotate(2deg) scaleY(1.05) scaleX(.97); }
+    65%{ transform:rotate(4deg) scaleY(.97) scaleX(1.02); }
   }
   .brand .tagline{
     font-size:12.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
@@ -68,7 +99,7 @@
   .user-email{ font-size:12px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .logout-btn{
     background:#463c30; color:var(--paper); border:1px solid #574b3c; border-radius:8px;
-    padding:5px 12px; font-size:12.5px;
+    padding:5px 12px; font-size:12.5px; transition:background .15s var(--ease);
   }
   .logout-btn:hover{ background:#574b3c; }
 
@@ -111,9 +142,11 @@
   .chip-btn{
     background:#fffdf8; color:var(--ink); border:1.5px solid var(--line); border-radius:20px;
     padding:8px 14px; font-size:13.5px; font-weight:600;
+    box-shadow:none; transition: border-color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);
   }
-  .chip-btn.active{ background:var(--herb); color:#fff; border-color:var(--herb-dark); }
-  .chip-btn:hover:not(.active){ border-color:var(--accent); }
+  .chip-btn:hover{ transform:translateY(-1px); }
+  .chip-btn.active{ background:linear-gradient(155deg, var(--herb-light), var(--herb) 70%); color:#fff; border-color:var(--herb-dark); box-shadow:var(--shadow-sm); }
+  .chip-btn:hover:not(.active){ border-color:var(--accent); background:#fffdf8; }
 
   .plan-summary{
     background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
@@ -165,13 +198,27 @@
   /* ---------- Chat flotante ---------- */
   #chatFab{
     position:fixed; bottom:22px; right:20px; z-index:60;
-    width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff;
-    font-size:24px; box-shadow:0 6px 18px rgba(36,31,26,.35); border:none;
+    width:66px; height:66px; border-radius:50%;
+    background:linear-gradient(155deg, var(--accent-light), var(--accent) 55%, var(--accent-dark));
+    color:#fff8ee; border:none;
+    box-shadow:0 10px 24px -6px rgba(166,111,23,.55), 0 3px 8px rgba(36,31,26,.25);
     display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    animation:fabBounce 2.6s ease-in-out infinite;
+    transition:box-shadow .2s var(--ease), transform .2s var(--ease), background .2s;
   }
-  #chatFab:hover{ background:var(--accent-dark); }
+  #chatFab .chef-hat-icon{ width:30px; height:30px; fill:#fff8ee; filter:drop-shadow(0 1px 1px rgba(36,31,26,.3)); }
+  #chatFab:hover{
+    background:linear-gradient(155deg, var(--accent-light), var(--accent-dark) 75%);
+    box-shadow:0 14px 30px -6px rgba(166,111,23,.65), 0 4px 10px rgba(36,31,26,.3);
+    animation-play-state:paused; transform:translateY(-3px) scale(1.05);
+  }
+  @keyframes fabBounce{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-5px); }
+  }
   #chatPanel{
-    position:fixed; bottom:88px; right:20px; z-index:60; width:min(360px, 92vw); max-height:70vh;
+    position:fixed; bottom:88px; right:20px; z-index:60; width:min(560px, 94vw); max-height:82vh;
     background:var(--paper-card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
     display:flex; flex-direction:column; overflow:hidden;
   }
@@ -180,14 +227,20 @@
     background:var(--ink); color:var(--paper); flex-shrink:0;
   }
   .chat-context-label{ font-size:11.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
-  .chat-messages{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:180px; }
-  .chat-msg{ max-width:85%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.45; }
+  .chat-messages{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; min-height:340px; }
+  .chat-msg{ max-width:88%; padding:9px 12px; border-radius:12px; font-size:14px; line-height:1.5; }
   .chat-msg.user{ align-self:flex-end; background:var(--herb); color:#fff; border-bottom-right-radius:3px; }
   .chat-msg.model{ align-self:flex-start; background:var(--paper-dark); color:var(--ink); border-bottom-left-radius:3px; white-space:pre-wrap; }
   .chat-msg.loading{ align-self:flex-start; background:var(--paper-dark); color:var(--ink-soft); font-style:italic; }
-  .chat-input-row{ display:flex; gap:8px; padding:10px; border-top:1px solid var(--line); flex-shrink:0; }
-  .chat-input-row textarea{ flex:1; resize:none; min-height:38px; max-height:100px; }
-  .chat-input-row button{ padding:8px 14px; }
+  .chat-input-row{ display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); flex-shrink:0; }
+  .chat-input-row textarea{ flex:1; resize:vertical; min-height:54px; max-height:220px; }
+  .chat-input-row button{ padding:8px 16px; }
+  @media (max-width: 640px){
+    #chatPanel{
+      position:fixed; top:6vh; bottom:6vh; right:3vw; left:3vw; width:auto; max-height:none; height:88vh;
+    }
+    .chat-messages{ min-height:0; }
+  }
   nav.tabs{
     display:flex; gap:6px; flex:1;
     overflow-x:auto; scroll-behavior:smooth; scroll-snap-type:x proximity;
@@ -199,10 +252,10 @@
     flex:0 0 auto; background:#332c24; color:#d8cfbe; border:none;
     width:30px; height:30px; border-radius:50%; font-size:17px; line-height:1;
     display:flex; align-items:center; justify-content:center; margin-bottom:6px;
-    cursor:pointer; transition: background .15s, color .15s;
+    cursor:pointer; transition: background .15s var(--ease), color .15s var(--ease), transform .15s var(--ease);
   }
-  .tab-arrow:hover{ background:#463c30; color:var(--paper); }
-  .tab-arrow:disabled{ opacity:.3; cursor:default; }
+  .tab-arrow:hover{ background:#463c30; color:var(--paper); transform:translateY(-1px); }
+  .tab-arrow:disabled{ opacity:.3; cursor:default; transform:none; }
   .tab-btn{
     appearance:none; border:none; cursor:pointer;
     background:#332c24;
@@ -211,18 +264,23 @@
     padding:11px 22px 13px 22px;
     border-radius:10px 10px 0 0;
     clip-path: polygon(8% 0, 92% 0, 100% 100%, 0% 100%);
-    transition: background .15s, color .15s, transform .1s;
+    transition: background .18s var(--ease), color .18s var(--ease), transform .18s var(--ease);
     position:relative; top:1px;
     flex:0 0 auto; white-space:nowrap; scroll-snap-align:start;
   }
-  .tab-btn:hover{ background:#463c30; color:var(--paper); }
+  .tab-btn:hover{ background:#463c30; color:var(--paper); transform:translateY(-2px); }
   .tab-btn.active{
     background:var(--paper-card); color:var(--ink);
+    box-shadow:0 -4px 14px rgba(0,0,0,.12);
+  }
+  .tab-btn.active::after{
+    content:""; position:absolute; left:26%; right:26%; bottom:9px; height:3px; border-radius:3px;
+    background:linear-gradient(90deg, var(--accent), var(--herb));
   }
   main{ max-width:980px; margin:0 auto; padding:28px 20px 80px 20px; }
-  .tab-panel{ display:none; animation: fade .25s ease; }
+  .tab-panel{ display:none; animation: fade .3s var(--ease); }
   .tab-panel.active{ display:block; }
-  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
 
   /* ---------- Extract form ---------- */
   .intro{ margin-bottom:18px; }
@@ -234,35 +292,39 @@
   }
   input[type=text], input[type=password], input[type=number], select, textarea{
     font-family:'Inter',sans-serif; font-size:14.5px;
-    border:1px solid var(--line); border-radius:9px; padding:11px 13px;
+    border:1px solid var(--line); border-radius:var(--radius-sm); padding:11px 13px;
     background:#fffdf8; color:var(--ink);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
   }
   input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus{
-    outline:2px solid var(--accent); outline-offset:1px;
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(201,138,31,.18);
   }
   #videoUrl{ flex:1; min-width:220px; }
   button{
     font-family:'Inter',sans-serif; font-weight:600; font-size:14px;
-    cursor:pointer; border:none; border-radius:9px; padding:11px 18px;
-    background:var(--accent); color:#fff8ee;
-    transition: transform .08s, background .15s;
+    cursor:pointer; border:none; border-radius:var(--radius-sm); padding:11px 18px;
+    background:linear-gradient(155deg, var(--accent-light), var(--accent) 65%);
+    color:#fff8ee;
+    box-shadow:var(--shadow-sm);
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
   }
-  button:hover{ background:var(--accent-dark); }
-  button:active{ transform:scale(.97); }
-  button.secondary{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
-  button.secondary:hover{ background:var(--paper-dark); }
-  button.ghost{ background:transparent; color:var(--herb-dark); border:none; padding:6px 8px; font-weight:600;}
-  button.danger{ background:var(--rust); color:#fff2ef;}
-  button.danger:hover{ background:#832f27; }
-  button:disabled{ opacity:.55; cursor:not-allowed; }
+  button:hover{ background:linear-gradient(155deg, var(--accent-light), var(--accent-dark) 75%); transform:translateY(-1px); box-shadow:0 4px 12px rgba(166,111,23,.3); }
+  button:active{ transform:scale(.97) translateY(0); }
+  button.secondary{ background:transparent; color:var(--ink); border:1.5px solid var(--line); box-shadow:none; }
+  button.secondary:hover{ background:var(--paper-dark); box-shadow:none; }
+  button.ghost{ background:transparent; color:var(--herb-dark); border:none; padding:6px 8px; font-weight:600; box-shadow:none;}
+  button.ghost:hover{ background:transparent; box-shadow:none; transform:none; }
+  button.danger{ background:linear-gradient(155deg, #c25148, var(--rust) 70%); color:#fff2ef;}
+  button.danger:hover{ background:linear-gradient(155deg, #c25148, #832f27 80%); }
+  button:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
 
   .platform-hint{ font-size:12.5px; color:var(--ink-soft); margin-top:8px; font-family:'IBM Plex Mono',monospace;}
 
   .dropzone{
     background:var(--paper-card); border:2px dashed var(--line); border-radius:var(--radius);
-    padding:26px; text-align:center; cursor:pointer; transition: border-color .15s, background .15s;
+    padding:26px; text-align:center; cursor:pointer; transition: border-color .2s var(--ease), background .2s var(--ease), transform .2s var(--ease);
   }
-  .dropzone:hover, .dropzone.dragover{ border-color:var(--accent); background:var(--paper-dark); }
+  .dropzone:hover, .dropzone.dragover{ border-color:var(--accent); background:var(--paper-dark); transform:translateY(-2px); }
   .dropzone p{ margin:8px 0 0 0; color:var(--ink-soft); font-size:14px; }
   .dropzone img#imagePreview{ max-width:100%; max-height:320px; border-radius:10px; object-fit:contain; }
 
@@ -283,12 +345,13 @@
 
   #statusArea{ margin-top:16px; }
   .status{
-    padding:12px 14px; border-radius:10px; font-size:14px; display:flex; gap:10px; align-items:flex-start;
+    padding:12px 14px; border-radius:12px; font-size:14px; display:flex; gap:10px; align-items:flex-start;
+    border-left:3px solid transparent; box-shadow:var(--shadow-sm); animation:fade .25s var(--ease);
   }
-  .status.info{ background:#eee4cd; color:#5c4a1f; }
-  .status.loading{ background:#e7e0cf; color:var(--ink-soft); }
-  .status.error{ background:var(--rust-bg); color:var(--rust); white-space:pre-wrap; }
-  .status.ok{ background:#e2ead7; color:var(--herb-dark); }
+  .status.info{ background:#eee4cd; color:#5c4a1f; border-left-color:var(--accent); }
+  .status.loading{ background:#e7e0cf; color:var(--ink-soft); border-left-color:var(--ink-soft); }
+  .status.error{ background:var(--rust-bg); color:var(--rust); white-space:pre-wrap; border-left-color:var(--rust); }
+  .status.ok{ background:#e2ead7; color:var(--herb-dark); border-left-color:var(--herb); }
   .spinner{
     width:16px; height:16px; border-radius:50%;
     border:2.5px solid #cbb; border-top-color:var(--accent);
@@ -300,10 +363,12 @@
   .recipe-card{
     margin-top:22px; background:var(--paper-card); border-radius:var(--radius);
     box-shadow:var(--shadow); position:relative; overflow:hidden; border:1px solid var(--line);
+    transition: box-shadow .25s var(--ease), transform .25s var(--ease);
   }
+  .recipe-card:hover{ box-shadow:var(--shadow-lift); transform:translateY(-3px); }
   .recipe-card::before{
     content:""; position:absolute; top:16px; left:0; right:0; height:0;
-    border-top:2px dashed rgba(36,31,26,.25);
+    border-top:2px dashed rgba(36,31,26,.22);
   }
   .card-holes{
     position:absolute; top:6px; left:0; right:0; display:flex; justify-content:center; gap:120px;
@@ -314,11 +379,11 @@
   }
   .card-body{ padding:38px 26px 26px 26px; }
   .card-hero{
-    width:100%; max-height:340px; object-fit:cover; border-radius:10px; margin-bottom:16px;
-    border:1px solid var(--line); background:var(--paper-dark);
+    width:100%; max-height:340px; object-fit:cover; border-radius:12px; margin-bottom:16px;
+    border:1px solid var(--line); background:var(--paper-dark); box-shadow:var(--shadow-sm);
   }
   .card-hero-placeholder{
-    width:100%; height:150px; border-radius:10px; margin-bottom:16px;
+    width:100%; height:150px; border-radius:12px; margin-bottom:16px;
     background:repeating-linear-gradient(45deg, var(--paper-dark), var(--paper-dark) 10px, var(--paper) 10px, var(--paper) 20px);
     display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:13px; text-align:center; padding:10px;
   }
@@ -341,19 +406,24 @@
   .section-title::after{ content:""; flex:1; height:1px; background:var(--line); }
   ul.ingredients{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
   ul.ingredients li{
-    display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:8px; background:#fffdf8; border:1px solid var(--line);
+    display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:10px; background:#fffdf8; border:1px solid var(--line);
+    transition: background .15s var(--ease);
   }
+  ul.ingredients li:hover{ background:var(--paper-card); }
   ul.ingredients li.done label{ text-decoration:line-through; opacity:.5; }
   ul.ingredients .amt{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--accent-dark); min-width:70px; }
   ol.steps{ list-style:none; margin:0; padding:0; display:grid; gap:10px; counter-reset: step; }
   ol.steps li{
-    counter-increment: step; display:flex; gap:12px; padding:12px; border-radius:10px; background:#fffdf8; border:1px solid var(--line);
+    counter-increment: step; display:flex; gap:12px; padding:12px; border-radius:12px; background:#fffdf8; border:1px solid var(--line);
+    transition: background .15s var(--ease);
   }
+  ol.steps li:hover{ background:var(--paper-card); }
   ol.steps li.done{ opacity:.55; }
   ol.steps li.done p{ text-decoration:line-through; }
   ol.steps .num{
-    font-family:'Fraunces',serif; font-weight:700; color:#fff; background:var(--herb);
+    font-family:'Fraunces',serif; font-weight:700; color:#fff; background:linear-gradient(155deg, var(--herb-light), var(--herb) 70%);
     width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    box-shadow:var(--shadow-sm);
   }
   ol.steps p{ margin:0 0 6px 0; line-height:1.5; }
   .step-timer{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:center; }
@@ -367,9 +437,11 @@
   /* ---------- My recipes ---------- */
   .recipes-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
   .recipe-mini{
-    background:var(--paper-card); border-radius:12px; border:1px solid var(--line); box-shadow:var(--shadow);
+    background:var(--paper-card); border-radius:14px; border:1px solid var(--line); box-shadow:var(--shadow-sm);
     overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+    transition: box-shadow .2s var(--ease), transform .2s var(--ease);
   }
+  .recipe-mini:hover{ box-shadow:var(--shadow-lift); transform:translateY(-4px); }
   .recipe-mini img{ width:100%; height:120px; object-fit:cover; background:var(--paper-dark); }
   .recipe-mini .ph{ width:100%; height:120px; background:var(--paper-dark); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:24px;}
   .recipe-mini .mini-body{ padding:12px; flex:1; display:flex; flex-direction:column; gap:6px; }
@@ -408,7 +480,7 @@
 <div id="authGate">
   <div class="auth-card">
     <div class="brand" style="justify-content:center; margin-bottom:4px;">
-      <span class="mark">🔥 Sazón Lens</span>
+      <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
     </div>
     <p class="auth-sub">Inicia sesión para guardar tus recetas en la nube y verlas desde cualquier dispositivo.</p>
 
@@ -442,7 +514,7 @@
 <div id="appShell" hidden>
 <header class="topbar">
   <div class="brand">
-    <span class="mark">🔥 Sazón Lens</span>
+    <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
     <span class="tagline">recetas desde video, foto o texto · con Gemini AI</span>
     <select id="headerLanguage" class="header-lang">
       <option value="español">🇪🇸 Español</option>
@@ -458,7 +530,8 @@
   <div class="tabs-carousel">
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
     <nav class="tabs" id="tabsTrack">
-      <button class="tab-btn active" data-tab="extract">Desde Video</button>
+      <button class="tab-btn active" data-tab="extract">Desde YouTube</button>
+      <button class="tab-btn" data-tab="socialExtract">Desde redes</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
       <button class="tab-btn" data-tab="quickLog">Registro Rápido</button>
@@ -472,10 +545,10 @@
 
 <main>
 
-  <!-- EXTRACT TAB -->
+  <!-- EXTRACT TAB (YouTube only, vía Gemini) -->
   <section id="tab-extract" class="tab-panel active">
     <div class="intro">
-      <p>Pega el enlace de un video de cocina y la IA transformará el video en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato. Funciona mejor con enlaces de <strong>YouTube</strong>, que Gemini puede ver directamente.</p>
+      <p>Pega el enlace de un video de <strong>YouTube</strong> de cocina y Gemini AI lo verá directamente para transformarlo en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato.</p>
     </div>
     <div class="url-form">
       <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
@@ -485,13 +558,45 @@
 
     <div id="fallbackArea" hidden>
       <div class="field">
-        <label>Este enlace no es de YouTube — pega aquí la descripción, subtítulos o transcripción del video (opcional pero recomendado)</label>
+        <label>Ese enlace no parece de YouTube — pega aquí la descripción, subtítulos o transcripción del video (opcional pero recomendado). Para videos de TikTok, Instagram o Facebook, usa mejor la pestaña <strong>"Desde redes"</strong>.</label>
         <textarea id="fallbackText" placeholder="Ej: ingredientes que se mencionan, pasos que se ven en el video, texto que aparece en pantalla..."></textarea>
       </div>
     </div>
 
     <div id="statusArea"></div>
     <div id="recipeResult"></div>
+  </section>
+
+  <!-- SOCIAL EXTRACT TAB (Facebook / Instagram / TikTok — arquitectura propia, sin Gemini) -->
+  <section id="tab-socialExtract" class="tab-panel">
+    <div class="intro">
+      <p>Pega un enlace de <strong>Facebook, Instagram, TikTok</strong> u otra red social y arma tu receta a partir de la información del video. Esta pestaña usa un sistema propio, totalmente independiente de Gemini: no se envía nada a la IA aquí, ni se comparten credenciales con las demás pestañas.</p>
+      <div class="status info" style="margin-top:8px;">ℹ️<div>Aviso: "Desde redes" se gestiona con un sistema distinto al resto de la app (no usa Gemini). Los datos que captures aquí se construyen y guardan de forma local/manual.</div></div>
+    </div>
+    <div class="url-form">
+      <input type="text" id="socialUrl" placeholder="https://www.tiktok.com/... · https://www.instagram.com/... · https://www.facebook.com/...">
+      <button id="socialFetchBtn" type="button">Buscar información</button>
+    </div>
+    <div class="platform-hint" id="socialPlatformHint"></div>
+
+    <div class="field">
+      <label>Título de la receta</label>
+      <input type="text" id="socialTitle" placeholder="Ej: Tacos de birria">
+    </div>
+    <div class="field">
+      <label>Ingredientes (uno por línea)</label>
+      <textarea id="socialIngredients" placeholder="Ej:&#10;2 tazas de harina&#10;1 cucharadita de sal&#10;3 huevos"></textarea>
+    </div>
+    <div class="field">
+      <label>Pasos (uno por línea)</label>
+      <textarea id="socialSteps" placeholder="Ej:&#10;Mezclar los ingredientes secos&#10;Agregar los huevos y batir&#10;Cocinar a fuego medio 10 minutos"></textarea>
+    </div>
+    <div class="url-form" style="margin-top:4px;">
+      <button id="socialBuildBtn" type="button">Crear receta con esta información</button>
+    </div>
+
+    <div id="socialStatusArea"></div>
+    <div id="socialRecipeResult"></div>
   </section>
 
   <!-- IMAGE EXTRACT TAB -->
@@ -692,7 +797,12 @@
 
 </main>
 
-<button id="chatFab" type="button" aria-label="Abrir asistente de cocina">💬</button>
+<button id="chatFab" type="button" aria-label="Abrir asistente de cocina">
+  <svg class="chef-hat-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 2c-1.5 0-2.7 1-3.1 2.4C6.9 4.9 5.5 6.6 5.5 8.7c0 1.7.9 3.1 2.2 3.9-.4.5-.7 1.1-.7 1.9v2h10v-2c0-.8-.3-1.4-.7-1.9 1.3-.8 2.2-2.2 2.2-3.9 0-2.1-1.4-3.8-3.4-4.3C14.7 3 13.5 2 12 2Z"/>
+    <rect x="6" y="17" width="12" height="3.6" rx="1.6"/>
+  </svg>
+</button>
 
 <div id="chatPanel" hidden>
   <div class="chat-panel-header">
@@ -948,8 +1058,15 @@ function clearStatus(elId){ document.getElementById(elId).innerHTML=''; }
 function friendlyGoogleError(data, httpStatus){
   const msg = (data && data.error && data.error.message) ? data.error.message : '';
   const code = (data && data.error && data.error.code) ? data.error.code : httpStatus;
+  const status = (data && data.error && data.error.status) ? data.error.status : '';
+  const msgLower = msg.toLowerCase();
+  // Google a veces devuelve "clave inválida" con código 400 (INVALID_ARGUMENT) en vez de 401/403,
+  // así que hay que detectar este caso por el contenido del mensaje antes de usar el código HTTP.
+  const isKeyProblem = status === 'INVALID_ARGUMENT' && /api key not valid|api_key_invalid|api key expired|invalid api key/i.test(msgLower);
+  if(isKeyProblem || code === 401 || code === 403){
+    return `Tu clave de API de Gemini no es válida, expiró o no tiene permiso (código ${code}). Ve a la pestaña Configuración, borra la clave con "Eliminar clave" y pega una nueva copiada completa desde aistudio.google.com/apikey.\nDetalle de Google: ${msg}`;
+  }
   if(code === 400) return `La solicitud fue rechazada (400). Revisa que el enlace del video y el nombre del modelo sean correctos.\nDetalle de Google: ${msg}`;
-  if(code === 401 || code === 403) return `Tu clave de API no es válida o no tiene permiso (código ${code}). Revisa que la copiaste completa desde Google AI Studio.\nDetalle: ${msg}`;
   if(code === 404) return `El modelo "${msg.includes('model') ? '' : ''}" no existe o no está disponible para tu clave (404). Prueba con "Cargar modelos disponibles" en Configuración.\nDetalle: ${msg}`;
   if(code === 429) return `Se alcanzó el límite de uso gratuito por ahora (429 - cuota excedida). Espera un poco o cambia a un modelo distinto.\nDetalle: ${msg}`;
   if(code === 500 || code === 503) return `El servicio de Google no respondió correctamente (${code}). Puede ser temporal, intenta de nuevo en unos segundos.\nDetalle: ${msg}`;
@@ -959,15 +1076,20 @@ function friendlyGoogleError(data, httpStatus){
 function isYouTubeUrl(url){
   return /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(url);
 }
-function detectPlatform(url){
-  if(isYouTubeUrl(url)) return 'YouTube';
+function detectSocialPlatform(url){
   if(/tiktok\.com/i.test(url)) return 'TikTok';
   if(/instagram\.com/i.test(url)) return 'Instagram';
   if(/facebook\.com|fb\.watch/i.test(url)) return 'Facebook';
   if(/pinterest\.com|pin\.it/i.test(url)) return 'Pinterest';
   return null;
 }
+function detectPlatform(url){
+  if(isYouTubeUrl(url)) return 'YouTube';
+  return detectSocialPlatform(url);
+}
 
+/* Pestaña "Desde YouTube": solo YouTube va directo a Gemini. Cualquier otro enlace
+   se redirige a la pestaña "Desde redes", que usa su propia arquitectura sin Gemini. */
 document.getElementById('videoUrl').addEventListener('input', (e)=>{
   const url = e.target.value.trim();
   const platform = detectPlatform(url);
@@ -977,36 +1099,91 @@ document.getElementById('videoUrl').addEventListener('input', (e)=>{
   if(platform === 'YouTube'){
     hint.textContent = 'YouTube detectado — Gemini puede ver el video directamente. ✅';
     fallback.hidden = true;
-  } else if(platform === 'TikTok'){
-    hint.textContent = 'TikTok detectado — Gemini no puede ver el video directamente, pero intentaremos traer el título/descripción automáticamente.';
-    fallback.hidden = false;
-    tryAutofillTikTok(url);
   } else if(platform){
-    hint.textContent = `${platform} detectado — Gemini no puede acceder directamente a este tipo de video (solo YouTube). Pega abajo la descripción o los pasos que veas/escuches en el video para obtener mejores resultados.`;
+    hint.textContent = `${platform} detectado — esta pestaña solo funciona con YouTube. Usa la pestaña "Desde redes" para ${platform}.`;
     fallback.hidden = false;
   } else {
-    hint.textContent = 'Enlace no reconocido — se intentará de todos modos, pero funciona mejor con YouTube.';
+    hint.textContent = 'Enlace no reconocido — esta pestaña funciona solo con enlaces de YouTube.';
     fallback.hidden = false;
   }
 });
 
-let tikTokAutofillTimer = null;
-function tryAutofillTikTok(url){
-  clearTimeout(tikTokAutofillTimer);
-  tikTokAutofillTimer = setTimeout(async ()=>{
-    const textarea = document.getElementById('fallbackText');
-    if(textarea.value.trim()) return; // no sobrescribir lo que el usuario ya escribió
+/* ============================= DESDE REDES (Facebook / Instagram / TikTok) =============================
+   Arquitectura totalmente independiente de Gemini: no usa la clave de API de Gemini,
+   no llama a generativelanguage.googleapis.com y no comparte estado con las demás pestañas de IA. */
+document.getElementById('socialUrl').addEventListener('input', (e)=>{
+  const url = e.target.value.trim();
+  const platform = detectSocialPlatform(url) || (isYouTubeUrl(url) ? 'YouTube' : null);
+  const hint = document.getElementById('socialPlatformHint');
+  if(!url){ hint.textContent = ''; return; }
+  if(platform === 'YouTube'){
+    hint.textContent = 'Ese es un enlace de YouTube — para mejores resultados usa la pestaña "Desde YouTube" (usa Gemini).';
+  } else if(platform === 'TikTok'){
+    hint.textContent = 'TikTok detectado — intentaremos traer el título/descripción automáticamente al presionar "Buscar información".';
+  } else if(platform){
+    hint.textContent = `${platform} detectado. Este sistema no puede leer el video directamente; completa el título, ingredientes y pasos abajo con lo que veas/escuches.`;
+  } else {
+    hint.textContent = 'Enlace no reconocido — igual puedes completar los campos manualmente.';
+  }
+});
+
+document.getElementById('socialFetchBtn').addEventListener('click', async ()=>{
+  const url = document.getElementById('socialUrl').value.trim();
+  if(!url){ setStatus('socialStatusArea','error','Pega primero el enlace de la red social.'); return; }
+  const platform = detectSocialPlatform(url);
+  if(platform === 'TikTok'){
+    setStatus('socialStatusArea','loading','Buscando título y autor en TikTok...');
     try{
       const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-      if(!res.ok) return;
+      if(!res.ok) throw new Error('TikTok no devolvió información para ese enlace.');
       const data = await res.json();
       if(data.title){
-        textarea.value = `Título/descripción del video (obtenido automáticamente): ${data.title}${data.author_name ? ' — por ' + data.author_name : ''}`;
-        textarea.placeholder = 'Puedes agregar más detalles si los sabes (ingredientes, pasos)...';
+        const titleInput = document.getElementById('socialTitle');
+        if(!titleInput.value.trim()) titleInput.value = data.title;
+        const stepsArea = document.getElementById('socialSteps');
+        if(!stepsArea.value.trim()){
+          stepsArea.value = `Descripción original del video${data.author_name ? ' (por ' + data.author_name + ')' : ''}: ${data.title}`;
+        }
+        setStatus('socialStatusArea','ok','Información encontrada. Completa o ajusta los ingredientes y pasos abajo. ✅');
+      } else {
+        setStatus('socialStatusArea','info','No se encontró título automático; completa los campos manualmente.');
       }
-    }catch(e){ /* si falla, se deja el campo manual sin problema */ }
-  }, 500);
-}
+    }catch(err){
+      setStatus('socialStatusArea','error', err.message + ' Completa los campos manualmente abajo.');
+    }
+    return;
+  }
+  setStatus('socialStatusArea','info', `${platform || 'Esta plataforma'} no permite traer datos automáticamente. Completa el título, ingredientes y pasos con lo que veas/escuches en el video, y presiona "Crear receta con esta información".`);
+});
+
+document.getElementById('socialBuildBtn').addEventListener('click', ()=>{
+  const url = document.getElementById('socialUrl').value.trim();
+  const title = document.getElementById('socialTitle').value.trim();
+  const ingredientsRaw = document.getElementById('socialIngredients').value;
+  const stepsRaw = document.getElementById('socialSteps').value;
+  if(!title){ setStatus('socialStatusArea','error','Escribe al menos un título para la receta.'); return; }
+  const ingredientLines = ingredientsRaw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const stepLines = stepsRaw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(ingredientLines.length===0 && stepLines.length===0){
+    setStatus('socialStatusArea','error','Agrega al menos un ingrediente o un paso.');
+    return;
+  }
+  const recipe = {
+    title,
+    summary: `Receta creada manualmente desde "Desde redes"${url ? ' — fuente: ' + url : ''}.`,
+    cuisine:'', difficulty:'', servings:4, servings_original:4,
+    prep_time_minutes:0, cook_time_minutes:0, total_time_minutes:0,
+    equipment: [],
+    ingredients: ingredientLines.map(line=>({ item: line, amount:0, unit:'', notes:'' })),
+    steps: stepLines.map((line,i)=>({ number:i+1, instruction: line })),
+    tips: [], tags: [],
+    sourceUrl: url || undefined
+  };
+  currentRecipe = recipe;
+  currentImageBase64 = null;
+  clearStatus('socialStatusArea');
+  renderRecipeCard(recipe, document.getElementById('socialRecipeResult'), {editable:true, saved:false, noAI:true});
+});
 
 /* ============================= GEMINI CALLS ============================= */
 async function callGemini(model, body, {retry=true} = {}){
@@ -1203,7 +1380,12 @@ async function doExtract(){
   const url = document.getElementById('videoUrl').value.trim();
   const fallbackText = document.getElementById('fallbackText') ? document.getElementById('fallbackText').value : '';
   document.getElementById('recipeResult').innerHTML = '';
-  if(!url){ setStatus('statusArea','error','Pega primero el enlace de un video.'); return; }
+  if(!url){ setStatus('statusArea','error','Pega primero el enlace de un video de YouTube.'); return; }
+  const socialPlatform = detectSocialPlatform(url);
+  if(socialPlatform){
+    setStatus('statusArea','error', `Ese es un enlace de ${socialPlatform}. Esta pestaña solo funciona con YouTube — usa la pestaña "Desde redes" para ${socialPlatform}.`);
+    return;
+  }
   if(!settings.apiKey){ setStatus('statusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
 
   setStatus('statusArea','loading','Analizando el video y extrayendo la receta... esto puede tardar hasta un minuto en videos largos.');
@@ -1794,7 +1976,7 @@ function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
 
-function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
+function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = {}){
   lastViewedRecipe = recipe;
   const scale = (recipe.servings || recipe.servings_original) / (recipe.servings_original || recipe.servings || 1);
   const card = document.createElement('div');
@@ -1803,7 +1985,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
     <div class="card-holes"><span></span><span></span></div>
     <div class="card-body">
       ${recipe.image ? `<img class="card-hero" src="${recipe.image}" alt="Foto del plato">` :
-        `<div class="card-hero-placeholder" data-role="hero-ph">Sin foto todavía — genera una con "Generar imagen del plato"</div>`}
+        (noAI ? '' : `<div class="card-hero-placeholder" data-role="hero-ph">Sin foto todavía — genera una con "Generar imagen del plato"</div>`)}
       <div class="card-title-row">
         <h2>${escapeHtml(recipe.title || 'Receta sin título')}</h2>
       </div>
@@ -1840,7 +2022,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
           <li data-i="${i}">
             <input type="checkbox" class="ing-check">
             <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}
-              <button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>
+              ${noAI ? '' : `<button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>`}
               <div class="ing-sub-note" hidden></div>
             </label>
           </li>`).join('')}
@@ -1867,7 +2049,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
       <div class="tags-list">${recipe.tags.map(t=>`<span>#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
 
       <div class="card-actions">
-        <button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>
+        ${noAI ? '' : `<button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>`}
         <button type="button" class="secondary act-save">💾 ${saved ? 'Actualizar receta' : 'Guardar receta'}</button>
         <button type="button" class="secondary act-print">🖨 Imprimir</button>
         <button type="button" class="secondary act-pdf">⬇ Descargar PDF</button>
@@ -1882,11 +2064,11 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
   container.appendChild(card);
 
   // servings +/-
-  card.querySelector('.inc').addEventListener('click', ()=>{ recipe.servings = (recipe.servings||1)+1; renderRecipeCard(recipe, container, {editable, saved, savedId}); });
-  card.querySelector('.dec').addEventListener('click', ()=>{ recipe.servings = Math.max(1,(recipe.servings||1)-1); renderRecipeCard(recipe, container, {editable, saved, savedId}); });
+  card.querySelector('.inc').addEventListener('click', ()=>{ recipe.servings = (recipe.servings||1)+1; renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
+  card.querySelector('.dec').addEventListener('click', ()=>{ recipe.servings = Math.max(1,(recipe.servings||1)-1); renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
 
-  // generate image
-  card.querySelector('.act-image').addEventListener('click', async ()=>{
+  // generate image (no disponible en modo "Desde redes", sin Gemini)
+  card.querySelector('.act-image')?.addEventListener('click', async ()=>{
     const statusEl = card.querySelector('.card-status');
     statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Generando imagen del plato con IA...</div></div>`;
     try{
@@ -2010,7 +2192,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
       input.value = recipe.title;
       titleH2.replaceWith(input);
       input.focus();
-      input.addEventListener('blur', ()=>{ recipe.title = input.value; renderRecipeCard(recipe, container, {editable, saved, savedId}); });
+      input.addEventListener('blur', ()=>{ recipe.title = input.value; renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
       input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') input.blur(); });
     });
   }
