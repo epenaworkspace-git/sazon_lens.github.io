@@ -78,16 +78,19 @@
     background:linear-gradient(95deg, var(--accent-light), var(--accent) 55%, var(--accent-dark));
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
   }
-  .flame-icon{ width:24px; height:32px; flex-shrink:0; overflow:visible; }
-  .flame-icon .flame-outer{ transform-box:fill-box; transform-origin:50% 100%; animation:flameSway 2.6s ease-in-out infinite; }
-  .flame-icon .flame-inner{ transform-box:fill-box; transform-origin:50% 100%; animation:flameSway 1.7s ease-in-out infinite reverse; }
-  .flame-icon .fo1{ fill:var(--accent-dark); }
-  .flame-icon .fo2{ fill:var(--accent-light); }
-  .flame-icon .fi1{ fill:var(--paper-card); }
-  @keyframes flameSway{
-    0%,100%{ transform:rotate(-4deg) scaleY(1) scaleX(1); }
-    35%{ transform:rotate(2deg) scaleY(1.05) scaleX(.97); }
-    65%{ transform:rotate(4deg) scaleY(.97) scaleX(1.02); }
+  .flame-icon{
+    display:inline-block; font-size:26px; line-height:1; flex-shrink:0;
+    transform-origin:50% 95%;
+    filter:drop-shadow(0 2px 5px rgba(166,111,23,.55));
+    animation:flameMove 1.6s ease-in-out infinite;
+  }
+  @keyframes flameMove{
+    0%{ transform:rotate(-7deg) scale(1,1); }
+    20%{ transform:rotate(5deg) scale(.93,1.09); }
+    40%{ transform:rotate(-4deg) scale(1.07,.92); }
+    60%{ transform:rotate(6deg) scale(.95,1.07); }
+    80%{ transform:rotate(-6deg) scale(1.05,.95); }
+    100%{ transform:rotate(-7deg) scale(1,1); }
   }
   .brand .tagline{
     font-size:12.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
@@ -198,7 +201,7 @@
   /* ---------- Chat flotante ---------- */
   #chatFab{
     position:fixed; bottom:22px; right:20px; z-index:60;
-    width:66px; height:66px; border-radius:50%;
+    width:78px; height:78px; border-radius:50%;
     background:linear-gradient(155deg, var(--accent-light), var(--accent) 55%, var(--accent-dark));
     color:#fff8ee; border:none;
     box-shadow:0 10px 24px -6px rgba(166,111,23,.55), 0 3px 8px rgba(36,31,26,.25);
@@ -207,7 +210,11 @@
     animation:fabBounce 2.6s ease-in-out infinite;
     transition:box-shadow .2s var(--ease), transform .2s var(--ease), background .2s;
   }
-  #chatFab .chef-hat-icon{ width:30px; height:30px; fill:#fff8ee; filter:drop-shadow(0 1px 1px rgba(36,31,26,.3)); }
+  #chatFab .chef-hat-icon{ font-size:40px; line-height:1; filter:drop-shadow(0 1px 2px rgba(36,31,26,.35)); }
+  @media (max-width:640px){
+    #chatFab{ width:70px; height:70px; bottom:18px; right:16px; }
+    #chatFab .chef-hat-icon{ font-size:36px; }
+  }
   #chatFab:hover{
     background:linear-gradient(155deg, var(--accent-light), var(--accent-dark) 75%);
     box-shadow:0 14px 30px -6px rgba(166,111,23,.65), 0 4px 10px rgba(36,31,26,.3);
@@ -240,6 +247,28 @@
       position:fixed; top:6vh; bottom:6vh; right:3vw; left:3vw; width:auto; max-height:none; height:88vh;
     }
     .chat-messages{ min-height:0; }
+
+    header.topbar{ padding:14px 14px 0 14px; }
+    .brand{
+      flex-wrap:wrap;
+      row-gap:8px;
+      margin-bottom:12px;
+    }
+    .brand .mark{ font-size:20px; flex:1 1 100%; }
+    .brand .tagline{ display:none; }
+    .user-email{ display:none; }
+    .header-lang{
+      margin-left:0;
+      flex:1 1 auto;
+      order:3;
+    }
+    .logout-btn{
+      flex:0 0 auto;
+      order:4;
+    }
+    .tabs-carousel{ gap:4px; }
+    .tab-arrow{ width:26px; height:26px; font-size:15px; flex:0 0 auto; }
+    .tab-btn{ padding:9px 16px 11px 16px; font-size:13px; }
   }
   nav.tabs{
     display:flex; gap:6px; flex:1;
@@ -480,7 +509,7 @@
 <div id="authGate">
   <div class="auth-card">
     <div class="brand" style="justify-content:center; margin-bottom:4px;">
-      <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
+      <span class="mark"><span class="flame-icon" aria-hidden="true">🔥</span>Sazón Lens</span>
     </div>
     <p class="auth-sub">Inicia sesión para guardar tus recetas en la nube y verlas desde cualquier dispositivo.</p>
 
@@ -514,7 +543,7 @@
 <div id="appShell" hidden>
 <header class="topbar">
   <div class="brand">
-    <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
+    <span class="mark"><span class="flame-icon" aria-hidden="true">🔥</span>Sazón Lens</span>
     <span class="tagline">recetas desde video, foto o texto · con Gemini AI</span>
     <select id="headerLanguage" class="header-lang">
       <option value="español">🇪🇸 Español</option>
@@ -798,10 +827,7 @@
 </main>
 
 <button id="chatFab" type="button" aria-label="Abrir asistente de cocina">
-  <svg class="chef-hat-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M12 2c-1.5 0-2.7 1-3.1 2.4C6.9 4.9 5.5 6.6 5.5 8.7c0 1.7.9 3.1 2.2 3.9-.4.5-.7 1.1-.7 1.9v2h10v-2c0-.8-.3-1.4-.7-1.9 1.3-.8 2.2-2.2 2.2-3.9 0-2.1-1.4-3.8-3.4-4.3C14.7 3 13.5 2 12 2Z"/>
-    <rect x="6" y="17" width="12" height="3.6" rx="1.6"/>
-  </svg>
+  <span class="chef-hat-icon" aria-hidden="true">🧑‍🍳</span>
 </button>
 
 <div id="chatPanel" hidden>
