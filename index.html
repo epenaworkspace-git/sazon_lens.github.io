@@ -64,6 +64,104 @@
     margin-left:auto; background:#332c24; color:var(--paper); border:1px solid #4a4032;
     border-radius:8px; padding:5px 8px; font-size:13px; font-family:'Inter',sans-serif;
   }
+  .user-email{ font-size:12px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .logout-btn{
+    background:#463c30; color:var(--paper); border:1px solid #574b3c; border-radius:8px;
+    padding:5px 12px; font-size:12.5px;
+  }
+  .logout-btn:hover{ background:#574b3c; }
+
+  /* ---------- Auth gate ---------- */
+  #authGate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .auth-card{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:30px 26px; max-width:380px; width:100%;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .auth-sub{ text-align:center; color:var(--ink-soft); font-size:14px; margin:0 0 4px 0; line-height:1.5; }
+  .auth-tabs{ display:flex; background:var(--paper-dark); border-radius:10px; padding:3px; }
+  .auth-tab-btn{
+    flex:1; background:transparent; color:var(--ink-soft); font-family:'Inter',sans-serif;
+    font-weight:600; font-size:13.5px; padding:8px; border-radius:8px;
+  }
+  .auth-tab-btn.active{ background:var(--paper-card); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .auth-form{ display:flex; flex-direction:column; gap:10px; }
+  .auth-form input{ width:100%; }
+  .auth-form button[type=submit]{ margin-top:4px; }
+  .auth-divider{ display:flex; align-items:center; gap:10px; color:var(--ink-soft); font-size:12.5px; }
+  .auth-divider::before, .auth-divider::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .auth-google-btn{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background:#fff; color:#3c4043; border:1px solid #dadce0; border-radius:8px;
+    padding:11px 16px; font-family:'Inter',sans-serif; font-weight:600; font-size:14px;
+    box-shadow:0 1px 2px rgba(0,0,0,.08); transition: background .15s, box-shadow .15s;
+  }
+  .auth-google-btn:hover{ background:#f7f8f8; box-shadow:0 1px 4px rgba(0,0,0,.15); }
+  .auth-google-btn:active{ background:#f1f3f4; }
+
+  /* ---------- Plan nutricional ---------- */
+  .plan-form{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:18px; display:grid; gap:16px;
+  }
+  .chip-group{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-btn{
+    background:#fffdf8; color:var(--ink); border:1.5px solid var(--line); border-radius:20px;
+    padding:8px 14px; font-size:13.5px; font-weight:600;
+  }
+  .chip-btn.active{ background:var(--herb); color:#fff; border-color:var(--herb-dark); }
+  .chip-btn:hover:not(.active){ border-color:var(--accent); }
+
+  .plan-summary{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:20px; margin-top:18px;
+  }
+  .plan-macros{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
+  .plan-macro-chip{ background:var(--paper-dark); border-radius:10px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; }
+  .plan-macro-chip b{ display:block; font-size:16px; color:var(--accent-dark); }
+  .plan-days{ display:grid; gap:14px; margin-top:16px; }
+  .plan-day-card{
+    background:#fffdf8; border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+  }
+  .plan-day-title{ font-family:'Fraunces',serif; font-weight:700; color:var(--herb-dark); margin-bottom:8px; }
+  .plan-meal{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px dashed var(--line); }
+  .plan-meal:first-of-type{ border-top:none; }
+  .plan-meal-info{ flex:1; }
+  .plan-meal-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
+  .plan-meal-title{ font-weight:600; margin:2px 0; }
+  .plan-meal-desc{ font-size:13px; color:var(--ink-soft); line-height:1.4; }
+  .plan-meal-cal{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent-dark); white-space:nowrap; }
+  .plan-meal-recipe-btn{ background:transparent; color:var(--herb-dark); border:1px solid var(--herb); border-radius:8px; padding:4px 10px; font-size:12px; margin-top:6px; }
+  .plan-tips{ background:#f4ecd7; border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 8px 8px 0; font-size:14px; margin-top:14px; }
+
+  /* ---------- Chat flotante ---------- */
+  #chatFab{
+    position:fixed; bottom:22px; right:20px; z-index:60;
+    width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff;
+    font-size:24px; box-shadow:0 6px 18px rgba(36,31,26,.35); border:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #chatFab:hover{ background:var(--accent-dark); }
+  #chatPanel{
+    position:fixed; bottom:88px; right:20px; z-index:60; width:min(360px, 92vw); max-height:70vh;
+    background:var(--paper-card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .chat-panel-header{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+    background:var(--ink); color:var(--paper); flex-shrink:0;
+  }
+  .chat-context-label{ font-size:11.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+  .chat-messages{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:180px; }
+  .chat-msg{ max-width:85%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.45; }
+  .chat-msg.user{ align-self:flex-end; background:var(--herb); color:#fff; border-bottom-right-radius:3px; }
+  .chat-msg.model{ align-self:flex-start; background:var(--paper-dark); color:var(--ink); border-bottom-left-radius:3px; white-space:pre-wrap; }
+  .chat-msg.loading{ align-self:flex-start; background:var(--paper-dark); color:var(--ink-soft); font-style:italic; }
+  .chat-input-row{ display:flex; gap:8px; padding:10px; border-top:1px solid var(--line); flex-shrink:0; }
+  .chat-input-row textarea{ flex:1; resize:none; min-height:38px; max-height:100px; }
+  .chat-input-row button{ padding:8px 14px; }
   nav.tabs{
     display:flex; gap:6px; flex:1;
     overflow-x:auto; scroll-behavior:smooth; scroll-snap-type:x proximity;
@@ -281,6 +379,41 @@
 </head>
 <body>
 
+<div id="authGate">
+  <div class="auth-card">
+    <div class="brand" style="justify-content:center; margin-bottom:4px;">
+      <span class="mark">🔥 Sazón Lens</span>
+    </div>
+    <p class="auth-sub">Inicia sesión para guardar tus recetas en la nube y verlas desde cualquier dispositivo.</p>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab-btn active" data-authtab="login">Iniciar sesión</button>
+      <button type="button" class="auth-tab-btn" data-authtab="signup">Crear cuenta</button>
+    </div>
+
+    <form id="authForm" class="auth-form">
+      <input type="email" id="authEmail" placeholder="Correo electrónico" autocomplete="email" required>
+      <input type="password" id="authPassword" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password" required minlength="6">
+      <button type="submit" id="authSubmitBtn">Iniciar sesión</button>
+    </form>
+    <button type="button" id="forgotPasswordBtn" class="ghost" style="align-self:center;">¿Olvidaste tu contraseña?</button>
+
+    <div class="auth-divider"><span>o</span></div>
+    <button type="button" id="googleSignInBtn" class="auth-google-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.8741 2.6836-6.6154z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8064 5.9564-2.1805l-2.9087-2.2581c-.8064.54-1.8368.8591-3.0477.8591-2.3445 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1022-1.17.2822-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.964 10.71z"/>
+        <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5814-2.5814C13.4632.8918 11.4259 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.6555 3.5795 9 3.5795z"/>
+      </svg>
+      <span>Continuar con Google</span>
+    </button>
+
+    <div id="authStatus"></div>
+  </div>
+</div>
+
+<div id="appShell" hidden>
 <header class="topbar">
   <div class="brand">
     <span class="mark">🔥 Sazón Lens</span>
@@ -293,6 +426,8 @@
       <option value="français">🇫🇷 Français</option>
       <option value="italiano">🇮🇹 Italiano</option>
     </select>
+    <span id="userEmailLabel" class="user-email"></span>
+    <button type="button" id="logoutBtn" class="logout-btn">Salir</button>
   </div>
   <div class="tabs-carousel">
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
@@ -300,6 +435,7 @@
       <button class="tab-btn active" data-tab="extract">Desde Video</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
+      <button class="tab-btn" data-tab="mealplan">Plan Nutricional</button>
       <button class="tab-btn" data-tab="myrecipes">Mis Recetas</button>
       <button class="tab-btn" data-tab="settings">Configuración</button>
     </nav>
@@ -364,6 +500,46 @@
     <div class="platform-hint">Tip: presiona Ctrl + Enter (o Cmd + Enter en Mac) para generar rápido.</div>
     <div id="textStatusArea"></div>
     <div id="textRecipeResult"></div>
+  </section>
+
+  <!-- MEAL PLAN TAB -->
+  <section id="tab-mealplan" class="tab-panel">
+    <div class="intro">
+      <p>Dinos tu objetivo y la IA te arma un menú semanal (desayuno, comida, cena y snack) alineado a tu meta, con calorías estimadas. Puedes repetir esa misma semana durante el tiempo que elijas.</p>
+    </div>
+
+    <div class="plan-form">
+      <div class="field">
+        <label>¿Cuál es tu objetivo?</label>
+        <div class="chip-group" id="goalGroup">
+          <button type="button" class="chip-btn active" data-value="bajar de peso">🔥 Bajar de peso</button>
+          <button type="button" class="chip-btn" data-value="ganar masa muscular">💪 Ganar músculo</button>
+          <button type="button" class="chip-btn" data-value="alimentación saludable">🥗 Comer más sano</button>
+          <button type="button" class="chip-btn" data-value="mantenimiento">⚖️ Mantenimiento</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Por cuánto tiempo quieres seguir el plan?</label>
+        <div class="chip-group" id="durationGroup">
+          <button type="button" class="chip-btn active" data-value="auto">✨ Que la IA lo recomiende</button>
+          <button type="button" class="chip-btn" data-value="semanal">Semanal (1 semana)</button>
+          <button type="button" class="chip-btn" data-value="quincenal">Quincenal (2 semanas)</button>
+          <button type="button" class="chip-btn" data-value="mensual">Mensual (4 semanas)</button>
+          <button type="button" class="chip-btn" data-value="trimestral">Trimestral (12 semanas)</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Restricciones o preferencias (opcional)</label>
+        <input type="text" id="planRestrictions" placeholder="Ej: vegetariano, sin gluten, no me gusta el pescado...">
+      </div>
+
+      <button id="generatePlanBtn">Generar mi plan semanal</button>
+    </div>
+
+    <div id="planStatusArea"></div>
+    <div id="planResult"></div>
   </section>
 
   <!-- MY RECIPES TAB -->
@@ -441,47 +617,117 @@
 
 </main>
 
+<button id="chatFab" type="button" aria-label="Abrir asistente de cocina">💬</button>
+
+<div id="chatPanel" hidden>
+  <div class="chat-panel-header">
+    <div>
+      <strong>Asistente de cocina</strong>
+      <div class="chat-context-label" id="chatContextLabel">Pregúntame lo que quieras</div>
+    </div>
+    <button type="button" id="chatCloseBtn" class="tab-arrow">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <textarea id="chatInput" placeholder="Escribe tu pregunta..." rows="1"></textarea>
+    <button type="button" id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+</div>
+
 <footer>Sazón Lens — impulsado por Inteligencia Artificial.</footer>
 
-<script>
-/* ============================= STORAGE (funciona dentro y fuera de Claude) ============================= */
+<script type="module">
+/* ============================= FIREBASE ============================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5MbdG5U6wX0z-wxtWKt_79kDVwrjYbM8",
+  authDomain: "sazon-lens.firebaseapp.com",
+  projectId: "sazon-lens",
+  storageBucket: "sazon-lens.firebasestorage.app",
+  messagingSenderId: "1098479710552",
+  appId: "1:1098479710552:web:11be3f1b24100087c2f52d",
+  measurementId: "G-49QKB6B9DP"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+let currentUser = null;
+
+function friendlyAuthError(err){
+  const code = err && err.code;
+  const map = {
+    'auth/invalid-email': 'Ese correo electrónico no es válido.',
+    'auth/user-not-found': 'No existe ninguna cuenta con ese correo. ¿Quieres crear una nueva?',
+    'auth/wrong-password': 'La contraseña es incorrecta.',
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Prueba iniciar sesión en vez de crear una cuenta.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/too-many-requests': 'Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.',
+    'auth/network-request-failed': 'No se pudo conectar. Revisa tu conexión a internet.',
+    'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de terminar el inicio de sesión.',
+    'auth/unauthorized-domain': 'Este sitio no está autorizado para el inicio de sesión con Google todavía. Usa correo y contraseña, o pide que se autorice este dominio en la configuración de Firebase.'
+  };
+  return map[code] || (err && err.message) || 'Ocurrió un error inesperado al iniciar sesión.';
+}
+
+/* ============================= STORAGE (nube si hay sesión, si no local) ============================= */
 const hasWidgetStorage = (typeof window.storage !== 'undefined');
 
-async function storeGet(key, fallbackParse){
+async function storeGet(key){
   try{
+    if(currentUser){
+      const snap = await getDoc(doc(db, 'users', currentUser.uid, 'kv', key));
+      return snap.exists() ? snap.data().value : null;
+    }
     if(hasWidgetStorage){
       const r = await window.storage.get(key, false);
       return r ? r.value : null;
-    } else {
-      return localStorage.getItem(key);
     }
+    return localStorage.getItem(key);
   }catch(e){ return null; }
 }
 async function storeSet(key, value){
   try{
-    if(hasWidgetStorage){ await window.storage.set(key, value, false); }
-    else{ localStorage.setItem(key, value); }
+    if(currentUser){ await setDoc(doc(db, 'users', currentUser.uid, 'kv', key), { value }); return; }
+    if(hasWidgetStorage){ await window.storage.set(key, value, false); return; }
+    localStorage.setItem(key, value);
   }catch(e){ /* no bloquear la app si falla el guardado */ }
 }
 async function storeDelete(key){
   try{
-    if(hasWidgetStorage){ await window.storage.delete(key, false); }
-    else{ localStorage.removeItem(key); }
+    if(currentUser){ await deleteDoc(doc(db, 'users', currentUser.uid, 'kv', key)); return; }
+    if(hasWidgetStorage){ await window.storage.delete(key, false); return; }
+    localStorage.removeItem(key);
   }catch(e){}
 }
 async function storeListKeys(prefix){
   try{
+    if(currentUser){
+      const snap = await getDocs(collection(db, 'users', currentUser.uid, 'kv'));
+      const out = [];
+      snap.forEach(d=>{ if(!prefix || d.id.startsWith(prefix)) out.push(d.id); });
+      return out;
+    }
     if(hasWidgetStorage){
       const r = await window.storage.list(prefix, false);
       return r ? r.keys : [];
-    } else {
-      const out = [];
-      for(let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if(k && k.startsWith(prefix)) out.push(k);
-      }
-      return out;
     }
+    const out = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(prefix)) out.push(k);
+    }
+    return out;
   }catch(e){ return []; }
 }
 
@@ -656,14 +902,36 @@ document.getElementById('videoUrl').addEventListener('input', (e)=>{
   if(platform === 'YouTube'){
     hint.textContent = 'YouTube detectado — Gemini puede ver el video directamente. ✅';
     fallback.hidden = true;
+  } else if(platform === 'TikTok'){
+    hint.textContent = 'TikTok detectado — Gemini no puede ver el video directamente, pero intentaremos traer el título/descripción automáticamente.';
+    fallback.hidden = false;
+    tryAutofillTikTok(url);
   } else if(platform){
-    hint.textContent = `${platform} detectado — Gemini no siempre puede acceder directamente a este tipo de enlace. Si la extracción falla, usa el campo de abajo para pegar la transcripción o descripción.`;
+    hint.textContent = `${platform} detectado — Gemini no puede acceder directamente a este tipo de video (solo YouTube). Pega abajo la descripción o los pasos que veas/escuches en el video para obtener mejores resultados.`;
     fallback.hidden = false;
   } else {
     hint.textContent = 'Enlace no reconocido — se intentará de todos modos, pero funciona mejor con YouTube.';
     fallback.hidden = false;
   }
 });
+
+let tikTokAutofillTimer = null;
+function tryAutofillTikTok(url){
+  clearTimeout(tikTokAutofillTimer);
+  tikTokAutofillTimer = setTimeout(async ()=>{
+    const textarea = document.getElementById('fallbackText');
+    if(textarea.value.trim()) return; // no sobrescribir lo que el usuario ya escribió
+    try{
+      const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
+      if(!res.ok) return;
+      const data = await res.json();
+      if(data.title){
+        textarea.value = `Título/descripción del video (obtenido automáticamente): ${data.title}${data.author_name ? ' — por ' + data.author_name : ''}`;
+        textarea.placeholder = 'Puedes agregar más detalles si los sabes (ingredientes, pasos)...';
+      }
+    }catch(e){ /* si falla, se deja el campo manual sin problema */ }
+  }, 500);
+}
 
 /* ============================= GEMINI CALLS ============================= */
 async function callGemini(model, body, {retry=true} = {}){
@@ -956,6 +1224,207 @@ async function doGenerateFromText(){
   }
 }
 
+/* ============================= MEAL PLAN TAB ============================= */
+let selectedGoal = 'bajar de peso';
+let selectedDuration = 'auto';
+
+function setupChipGroup(groupId, onSelect){
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.chip-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      group.querySelectorAll('.chip-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      onSelect(btn.dataset.value);
+    });
+  });
+}
+setupChipGroup('goalGroup', v=> selectedGoal = v);
+setupChipGroup('durationGroup', v=> selectedDuration = v);
+
+const MEAL_PLAN_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    goal_summary: { type: "STRING" },
+    recommended_duration_weeks: { type: "NUMBER" },
+    duration_explanation: { type: "STRING" },
+    daily_calorie_target: { type: "NUMBER" },
+    protein_g: { type: "NUMBER" },
+    carbs_g: { type: "NUMBER" },
+    fat_g: { type: "NUMBER" },
+    days: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          day_name: { type: "STRING" },
+          breakfast: { type: "OBJECT", properties:{ title:{type:"STRING"}, calories:{type:"NUMBER"}, description:{type:"STRING"} } },
+          lunch: { type: "OBJECT", properties:{ title:{type:"STRING"}, calories:{type:"NUMBER"}, description:{type:"STRING"} } },
+          dinner: { type: "OBJECT", properties:{ title:{type:"STRING"}, calories:{type:"NUMBER"}, description:{type:"STRING"} } },
+          snack: { type: "OBJECT", properties:{ title:{type:"STRING"}, calories:{type:"NUMBER"}, description:{type:"STRING"} } }
+        }
+      }
+    },
+    general_tips: { type: "ARRAY", items: { type: "STRING" } }
+  },
+  required: ["days"]
+};
+
+document.getElementById('generatePlanBtn').addEventListener('click', async ()=>{
+  const restrictions = document.getElementById('planRestrictions').value.trim();
+  const btn = document.getElementById('generatePlanBtn');
+  document.getElementById('planResult').innerHTML = '';
+  if(!settings.apiKey){ setStatus('planStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+  btn.disabled = true;
+  setStatus('planStatusArea','loading','Armando tu plan semanal según tu objetivo...');
+  try{
+    let durationText = 'recomienda tú misma la duración ideal según el objetivo';
+    if(selectedDuration === 'semanal') durationText = 'el usuario quiere seguirlo 1 semana';
+    if(selectedDuration === 'quincenal') durationText = 'el usuario quiere seguirlo 2 semanas (repitiendo esta misma semana dos veces, o alternando)';
+    if(selectedDuration === 'mensual') durationText = 'el usuario quiere seguirlo 4 semanas (repitiendo esta misma semana como base)';
+    if(selectedDuration === 'trimestral') durationText = 'el usuario quiere seguirlo 12 semanas (repitiendo esta misma semana como base, con variaciones si es posible)';
+
+    const instruction = `Crea un plan de alimentación de 7 días (lunes a domingo) con desayuno, comida, cena y una colación (snack), pensado para el objetivo: "${selectedGoal}". Sobre la duración: ${durationText}. Indica en "recommended_duration_weeks" y "duration_explanation" cuántas semanas recomiendas sostener este plan y por qué, pensando en salud y sostenibilidad (no recomiendes dietas extremas). Da un estimado de calorías diarias objetivo y macros (proteína, carbohidratos, grasas en gramos) razonables para ese objetivo en una persona adulta promedio. ${restrictions ? `Restricciones/preferencias del usuario: ${restrictions}.` : ''} Cada comida debe tener título, calorías aproximadas y una descripción breve (1-2 líneas). Agrega también 3-4 consejos generales. Responde completamente en ${settings.language}.`;
+
+    const body = {
+      contents: [{ role:'user', parts:[{text: instruction}] }],
+      generationConfig: { responseMimeType:'application/json', responseSchema: MEAL_PLAN_SCHEMA, temperature:0.5 }
+    };
+    const data = await callGemini(settings.textModel, body);
+    const textOut = extractTextFromResponse(data);
+    const plan = JSON.parse(textOut);
+    clearStatus('planStatusArea');
+    renderMealPlan(plan);
+  }catch(err){
+    setStatus('planStatusArea','error', err.message);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+function mealRow(label, meal){
+  if(!meal || !meal.title) return '';
+  return `
+    <div class="plan-meal">
+      <div class="plan-meal-info">
+        <div class="plan-meal-label">${label}</div>
+        <div class="plan-meal-title">${escapeHtml(meal.title)}</div>
+        ${meal.description ? `<div class="plan-meal-desc">${escapeHtml(meal.description)}</div>` : ''}
+        <button type="button" class="plan-meal-recipe-btn" data-meal="${escapeHtml(meal.title)} — ${escapeHtml(meal.description||'')}">Ver receta completa</button>
+      </div>
+      ${meal.calories ? `<div class="plan-meal-cal">${meal.calories} kcal</div>` : ''}
+    </div>`;
+}
+
+function renderMealPlan(plan){
+  const container = document.getElementById('planResult');
+  const wrap = document.createElement('div');
+  wrap.className = 'plan-summary';
+  wrap.innerHTML = `
+    <h2 style="font-size:20px;">Tu plan semanal</h2>
+    ${plan.goal_summary ? `<p class="card-summary">${escapeHtml(plan.goal_summary)}</p>` : ''}
+    ${plan.duration_explanation ? `<p class="card-summary"><strong>Duración recomendada:</strong> ${plan.recommended_duration_weeks ? plan.recommended_duration_weeks + ' semana(s). ' : ''}${escapeHtml(plan.duration_explanation)}</p>` : ''}
+    <div class="plan-macros">
+      ${plan.daily_calorie_target ? `<div class="plan-macro-chip"><b>${plan.daily_calorie_target}</b>kcal/día</div>` : ''}
+      ${plan.protein_g ? `<div class="plan-macro-chip"><b>${plan.protein_g}g</b>proteína</div>` : ''}
+      ${plan.carbs_g ? `<div class="plan-macro-chip"><b>${plan.carbs_g}g</b>carbos</div>` : ''}
+      ${plan.fat_g ? `<div class="plan-macro-chip"><b>${plan.fat_g}g</b>grasa</div>` : ''}
+    </div>
+    <div class="plan-days">
+      ${(plan.days||[]).map(day=>`
+        <div class="plan-day-card">
+          <div class="plan-day-title">${escapeHtml(day.day_name||'')}</div>
+          ${mealRow('Desayuno', day.breakfast)}
+          ${mealRow('Comida', day.lunch)}
+          ${mealRow('Cena', day.dinner)}
+          ${mealRow('Snack', day.snack)}
+        </div>`).join('')}
+    </div>
+    ${(plan.general_tips && plan.general_tips.length) ? `<div class="plan-tips">${plan.general_tips.map(t=>escapeHtml(t)).join('<br>')}</div>` : ''}
+  `;
+  container.innerHTML = '';
+  const recipeSlot = document.createElement('div');
+  recipeSlot.id = 'planRecipeSlot';
+  container.appendChild(recipeSlot);
+  container.appendChild(wrap);
+
+  wrap.querySelectorAll('.plan-meal-recipe-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = 'Generando...';
+      try{
+        const recipe = await generateRecipeFromText(btn.dataset.meal);
+        lastViewedRecipe = recipe;
+        renderRecipeCard(recipe, recipeSlot, {editable:true, saved:false});
+        window.scrollTo({top:0, behavior:'smooth'});
+      }catch(err){
+        alert('No se pudo generar la receta: ' + err.message);
+      }finally{
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
+}
+
+/* ============================= FLOATING CHAT ============================= */
+let lastViewedRecipe = null;
+let chatHistory = [];
+
+const chatFab = document.getElementById('chatFab');
+const chatPanel = document.getElementById('chatPanel');
+chatFab.addEventListener('click', ()=>{
+  chatPanel.hidden = !chatPanel.hidden;
+  if(!chatPanel.hidden){
+    document.getElementById('chatContextLabel').textContent = lastViewedRecipe
+      ? `Sobre: ${lastViewedRecipe.title}` : 'Pregúntame lo que quieras de cocina';
+    document.getElementById('chatInput').focus();
+  }
+});
+document.getElementById('chatCloseBtn').addEventListener('click', ()=>{ chatPanel.hidden = true; });
+
+function appendChatBubble(role, text){
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!settings.apiKey){ appendChatBubble('model','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+  input.value = '';
+  appendChatBubble('user', text);
+  chatHistory.push({ role:'user', text });
+  const loadingBubble = appendChatBubble('loading', 'Escribiendo...');
+  try{
+    const systemContext = lastViewedRecipe
+      ? `Eres un asistente de cocina amable y breve. El usuario está viendo esta receta:\n${JSON.stringify(lastViewedRecipe)}\nAyúdalo con conversiones de medidas, sustituciones de ingredientes, técnicas, ajustes de porciones o solución de problemas relacionados. Si la pregunta no tiene relación con la receta, contesta igual como asistente de cocina general.`
+      : `Eres un asistente de cocina amable y breve. Ayuda al usuario con dudas de cocina, ingredientes, técnicas o recetas.`;
+    const body = {
+      system_instruction: { parts: [{ text: systemContext + ` Responde siempre en ${settings.language}, de forma breve y clara.` }] },
+      contents: chatHistory.map(m=>({ role: m.role === 'user' ? 'user' : 'model', parts:[{text:m.text}] }))
+    };
+    const data = await callGemini(settings.textModel, body);
+    const reply = extractTextFromResponse(data);
+    loadingBubble.remove();
+    appendChatBubble('model', reply);
+    chatHistory.push({ role:'model', text: reply });
+  }catch(err){
+    loadingBubble.remove();
+    appendChatBubble('model', '⚠️ ' + err.message);
+  }
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChatMessage(); }
+});
+
 /* ============================= RECIPE CARD RENDERING ============================= */
 function fmtAmount(n){
   if(!n) return '';
@@ -967,6 +1436,7 @@ function escapeHtml(str){
 }
 
 function renderRecipeCard(recipe, container, {editable, saved, savedId} = {}){
+  lastViewedRecipe = recipe;
   const scale = (recipe.servings || recipe.servings_original) / (recipe.servings_original || recipe.servings || 1);
   const card = document.createElement('div');
   card.className = 'recipe-card';
@@ -1248,11 +1718,82 @@ async function renderRecipesGrid(){
   }
 }
 
+/* ============================= AUTH UI ============================= */
+let authMode = 'login';
+document.querySelectorAll('.auth-tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    authMode = btn.dataset.authtab;
+    document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
+    document.getElementById('authStatus').innerHTML = '';
+  });
+});
+
+document.getElementById('authForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  setStatus('authStatus','loading', authMode==='login' ? 'Iniciando sesión...' : 'Creando tu cuenta...');
+  try{
+    if(authMode === 'login'){
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+    clearStatus('authStatus');
+  }catch(err){
+    setStatus('authStatus','error', friendlyAuthError(err));
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('googleSignInBtn').addEventListener('click', async ()=>{
+  setStatus('authStatus','loading','Abriendo inicio de sesión de Google...');
+  try{
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    clearStatus('authStatus');
+  }catch(err){
+    setStatus('authStatus','error', friendlyAuthError(err));
+  }
+});
+
+document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ setStatus('authStatus','error','Escribe tu correo arriba primero, y luego presiona este botón.'); return; }
+  setStatus('authStatus','loading','Enviando correo de recuperación...');
+  try{
+    await sendPasswordResetEmail(auth, email);
+    setStatus('authStatus','ok', `Te enviamos un correo a ${email} con instrucciones para restablecer tu contraseña.`);
+  }catch(err){
+    setStatus('authStatus','error', friendlyAuthError(err));
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, async (user)=>{
+  currentUser = user;
+  if(user){
+    document.getElementById('authGate').hidden = true;
+    document.getElementById('appShell').hidden = false;
+    document.getElementById('userEmailLabel').textContent = user.email || '';
+    await loadSettings();
+    renderRecipesGrid();
+  } else {
+    document.getElementById('appShell').hidden = true;
+    document.getElementById('authGate').hidden = false;
+  }
+});
+
 /* ============================= INIT ============================= */
-(async function init(){
-  await loadSettings();
-  renderRecipesGrid();
-})();
+/* La carga de configuración y recetas ahora se dispara automáticamente
+   dentro de onAuthStateChanged una vez que el usuario inicia sesión. */
 </script>
 </body>
 </html>
