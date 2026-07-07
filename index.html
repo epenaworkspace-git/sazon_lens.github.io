@@ -558,7 +558,6 @@
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
     <nav class="tabs" id="tabsTrack">
       <button class="tab-btn active" data-tab="extract">Desde YouTube</button>
-      <button class="tab-btn" data-tab="socialExtract">Desde redes</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
       <button class="tab-btn" data-tab="quickLog">Registro Rápido</button>
@@ -585,45 +584,13 @@
 
     <div id="fallbackArea" hidden>
       <div class="field">
-        <label>Ese enlace no parece de YouTube — pega aquí la descripción, subtítulos o transcripción del video (opcional pero recomendado). Para videos de TikTok, Instagram o Facebook, usa mejor la pestaña <strong>"Desde redes"</strong>.</label>
+        <label>Ese enlace no parece de YouTube — pega aquí la descripción, subtítulos o transcripción del video (opcional pero recomendado).</label>
         <textarea id="fallbackText" placeholder="Ej: ingredientes que se mencionan, pasos que se ven en el video, texto que aparece en pantalla..."></textarea>
       </div>
     </div>
 
     <div id="statusArea"></div>
     <div id="recipeResult"></div>
-  </section>
-
-  <!-- SOCIAL EXTRACT TAB (Facebook / Instagram / TikTok — arquitectura propia, sin Gemini) -->
-  <section id="tab-socialExtract" class="tab-panel">
-    <div class="intro">
-      <p>Pega un enlace de <strong>Facebook, Instagram, TikTok</strong> u otra red social y arma tu receta a partir de la información del video. Esta pestaña usa un sistema propio, totalmente independiente de Gemini: no se envía nada a la IA aquí, ni se comparten credenciales con las demás pestañas.</p>
-      <div class="status info" style="margin-top:8px;">ℹ️<div>Aviso: "Desde redes" se gestiona con un sistema distinto al resto de la app (no usa Gemini). Los datos que captures aquí se construyen y guardan de forma local/manual.</div></div>
-    </div>
-    <div class="url-form">
-      <input type="text" id="socialUrl" placeholder="https://www.tiktok.com/... · https://www.instagram.com/... · https://www.facebook.com/...">
-      <button id="socialFetchBtn" type="button">Buscar información</button>
-    </div>
-    <div class="platform-hint" id="socialPlatformHint"></div>
-
-    <div class="field">
-      <label>Título de la receta</label>
-      <input type="text" id="socialTitle" placeholder="Ej: Tacos de birria">
-    </div>
-    <div class="field">
-      <label>Ingredientes (uno por línea)</label>
-      <textarea id="socialIngredients" placeholder="Ej:&#10;2 tazas de harina&#10;1 cucharadita de sal&#10;3 huevos"></textarea>
-    </div>
-    <div class="field">
-      <label>Pasos (uno por línea)</label>
-      <textarea id="socialSteps" placeholder="Ej:&#10;Mezclar los ingredientes secos&#10;Agregar los huevos y batir&#10;Cocinar a fuego medio 10 minutos"></textarea>
-    </div>
-    <div class="url-form" style="margin-top:4px;">
-      <button id="socialBuildBtn" type="button">Crear receta con esta información</button>
-    </div>
-
-    <div id="socialStatusArea"></div>
-    <div id="socialRecipeResult"></div>
   </section>
 
   <!-- IMAGE EXTRACT TAB -->
@@ -1113,7 +1080,7 @@ function detectPlatform(url){
 }
 
 /* Pestaña "Desde YouTube": solo YouTube va directo a Gemini. Cualquier otro enlace
-   se redirige a la pestaña "Desde redes", que usa su propia arquitectura sin Gemini. */
+   pide al usuario pegar la descripción/transcripción manualmente. */
 document.getElementById('videoUrl').addEventListener('input', (e)=>{
   const url = e.target.value.trim();
   const platform = detectPlatform(url);
@@ -1124,89 +1091,12 @@ document.getElementById('videoUrl').addEventListener('input', (e)=>{
     hint.textContent = 'YouTube detectado — Gemini puede ver el video directamente. ✅';
     fallback.hidden = true;
   } else if(platform){
-    hint.textContent = `${platform} detectado — esta pestaña solo funciona con YouTube. Usa la pestaña "Desde redes" para ${platform}.`;
+    hint.textContent = `${platform} detectado — esta pestaña solo funciona con YouTube. Pega la descripción o transcripción del video abajo.`;
     fallback.hidden = false;
   } else {
     hint.textContent = 'Enlace no reconocido — esta pestaña funciona solo con enlaces de YouTube.';
     fallback.hidden = false;
   }
-});
-
-/* ============================= DESDE REDES (Facebook / Instagram / TikTok) =============================
-   Arquitectura totalmente independiente de Gemini: no usa la clave de API de Gemini,
-   no llama a generativelanguage.googleapis.com y no comparte estado con las demás pestañas de IA. */
-document.getElementById('socialUrl').addEventListener('input', (e)=>{
-  const url = e.target.value.trim();
-  const platform = detectSocialPlatform(url) || (isYouTubeUrl(url) ? 'YouTube' : null);
-  const hint = document.getElementById('socialPlatformHint');
-  if(!url){ hint.textContent = ''; return; }
-  if(platform === 'YouTube'){
-    hint.textContent = 'Ese es un enlace de YouTube — para mejores resultados usa la pestaña "Desde YouTube" (usa Gemini).';
-  } else if(platform === 'TikTok'){
-    hint.textContent = 'TikTok detectado — intentaremos traer el título/descripción automáticamente al presionar "Buscar información".';
-  } else if(platform){
-    hint.textContent = `${platform} detectado. Este sistema no puede leer el video directamente; completa el título, ingredientes y pasos abajo con lo que veas/escuches.`;
-  } else {
-    hint.textContent = 'Enlace no reconocido — igual puedes completar los campos manualmente.';
-  }
-});
-
-document.getElementById('socialFetchBtn').addEventListener('click', async ()=>{
-  const url = document.getElementById('socialUrl').value.trim();
-  if(!url){ setStatus('socialStatusArea','error','Pega primero el enlace de la red social.'); return; }
-  const platform = detectSocialPlatform(url);
-  if(platform === 'TikTok'){
-    setStatus('socialStatusArea','loading','Buscando título y autor en TikTok...');
-    try{
-      const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-      if(!res.ok) throw new Error('TikTok no devolvió información para ese enlace.');
-      const data = await res.json();
-      if(data.title){
-        const titleInput = document.getElementById('socialTitle');
-        if(!titleInput.value.trim()) titleInput.value = data.title;
-        const stepsArea = document.getElementById('socialSteps');
-        if(!stepsArea.value.trim()){
-          stepsArea.value = `Descripción original del video${data.author_name ? ' (por ' + data.author_name + ')' : ''}: ${data.title}`;
-        }
-        setStatus('socialStatusArea','ok','Información encontrada. Completa o ajusta los ingredientes y pasos abajo. ✅');
-      } else {
-        setStatus('socialStatusArea','info','No se encontró título automático; completa los campos manualmente.');
-      }
-    }catch(err){
-      setStatus('socialStatusArea','error', err.message + ' Completa los campos manualmente abajo.');
-    }
-    return;
-  }
-  setStatus('socialStatusArea','info', `${platform || 'Esta plataforma'} no permite traer datos automáticamente. Completa el título, ingredientes y pasos con lo que veas/escuches en el video, y presiona "Crear receta con esta información".`);
-});
-
-document.getElementById('socialBuildBtn').addEventListener('click', ()=>{
-  const url = document.getElementById('socialUrl').value.trim();
-  const title = document.getElementById('socialTitle').value.trim();
-  const ingredientsRaw = document.getElementById('socialIngredients').value;
-  const stepsRaw = document.getElementById('socialSteps').value;
-  if(!title){ setStatus('socialStatusArea','error','Escribe al menos un título para la receta.'); return; }
-  const ingredientLines = ingredientsRaw.split('\n').map(l=>l.trim()).filter(Boolean);
-  const stepLines = stepsRaw.split('\n').map(l=>l.trim()).filter(Boolean);
-  if(ingredientLines.length===0 && stepLines.length===0){
-    setStatus('socialStatusArea','error','Agrega al menos un ingrediente o un paso.');
-    return;
-  }
-  const recipe = {
-    title,
-    summary: `Receta creada manualmente desde "Desde redes"${url ? ' — fuente: ' + url : ''}.`,
-    cuisine:'', difficulty:'', servings:4, servings_original:4,
-    prep_time_minutes:0, cook_time_minutes:0, total_time_minutes:0,
-    equipment: [],
-    ingredients: ingredientLines.map(line=>({ item: line, amount:0, unit:'', notes:'' })),
-    steps: stepLines.map((line,i)=>({ number:i+1, instruction: line })),
-    tips: [], tags: [],
-    sourceUrl: url || undefined
-  };
-  currentRecipe = recipe;
-  currentImageBase64 = null;
-  clearStatus('socialStatusArea');
-  renderRecipeCard(recipe, document.getElementById('socialRecipeResult'), {editable:true, saved:false, noAI:true});
 });
 
 /* ============================= GEMINI CALLS ============================= */
@@ -1407,7 +1297,7 @@ async function doExtract(){
   if(!url){ setStatus('statusArea','error','Pega primero el enlace de un video de YouTube.'); return; }
   const socialPlatform = detectSocialPlatform(url);
   if(socialPlatform){
-    setStatus('statusArea','error', `Ese es un enlace de ${socialPlatform}. Esta pestaña solo funciona con YouTube — usa la pestaña "Desde redes" para ${socialPlatform}.`);
+    setStatus('statusArea','error', `Ese es un enlace de ${socialPlatform}. Esta pestaña solo funciona con YouTube — pega la descripción o transcripción del video en el campo de abajo.`);
     return;
   }
   if(!settings.apiKey){ setStatus('statusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
@@ -2091,7 +1981,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
   card.querySelector('.inc').addEventListener('click', ()=>{ recipe.servings = (recipe.servings||1)+1; renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
   card.querySelector('.dec').addEventListener('click', ()=>{ recipe.servings = Math.max(1,(recipe.servings||1)-1); renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
 
-  // generate image (no disponible en modo "Desde redes", sin Gemini)
+  // generate image (requiere Gemini)
   card.querySelector('.act-image')?.addEventListener('click', async ()=>{
     const statusEl = card.querySelector('.card-status');
     statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Generando imagen del plato con IA...</div></div>`;
