@@ -498,6 +498,10 @@
     header.topbar, .card-actions, .url-form, .chat-box-form, #fallbackArea, .dropzone, .tabs-carousel{ display:none !important; }
     .tab-panel:not(.active){ display:none !important; }
     body{ background:#fff; }
+    ul.ingredients li, ol.steps li, .section-title, .card-hero, .meta-strip, .tips-box{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .section-title{ break-after:avoid; page-break-after:avoid; }
     .recipe-card{ box-shadow:none; border:none; }
   }
 </style>
@@ -819,10 +823,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail
+  GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail,
+  setPersistence, browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
+  enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -838,6 +844,11 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 let currentUser = null;
+
+/* Fuerza que la sesión y los datos persistan en este navegador/dispositivo,
+   para no depender del comportamiento por defecto del entorno (WebView, app, etc.). */
+setPersistence(auth, browserLocalPersistence).catch(()=>{ /* si falla, Firebase usa su persistencia por defecto */ });
+enableIndexedDbPersistence(db).catch(()=>{ /* si falla (ej. modo incógnito o pestañas múltiples), seguimos con localStorage como respaldo */ });
 
 function friendlyAuthError(err){
   const code = err && err.code;
@@ -856,35 +867,72 @@ function friendlyAuthError(err){
   return map[code] || (err && err.message) || 'Ocurrió un error inesperado al iniciar sesión.';
 }
 
-/* ============================= STORAGE (nube si hay sesión, si no local) ============================= */
+/* ============================= STORAGE (nube si hay sesión, con respaldo local siempre) =============================
+   Cambios clave para evitar el bug de "dice que guardó pero no guardó":
+   - storeSet YA NO se traga los errores en silencio: siempre intenta también guardar una copia
+     local (localStorage), y devuelve un objeto {cloud, local, error} para que quien llama pueda
+     mostrar un mensaje honesto al usuario.
+   - storeGet usa la nube como fuente principal, pero si falla o no encuentra el dato, cae de
+     vuelta a la copia local — así una receta guardada (o tu clave de API) sigue apareciendo aunque
+     la sincronización con la nube falle en ese momento.
+*/
 const hasWidgetStorage = (typeof window.storage !== 'undefined');
+const LOCAL_PREFIX = 'sazonlens:';
+function localKeyFor(key){
+  return LOCAL_PREFIX + (currentUser ? currentUser.uid : 'anon') + ':' + key;
+}
 
 async function storeGet(key){
-  try{
-    if(currentUser){
+  if(currentUser){
+    try{
       const snap = await getDoc(doc(db, 'users', currentUser.uid, 'kv', key));
-      return snap.exists() ? snap.data().value : null;
-    }
-    if(hasWidgetStorage){
+      if(snap.exists()) return snap.data().value;
+    }catch(e){ console.warn('storeGet: falló la lectura en la nube para', key, e); }
+  }
+  if(hasWidgetStorage){
+    try{
       const r = await window.storage.get(key, false);
-      return r ? r.value : null;
-    }
-    return localStorage.getItem(key);
+      if(r) return r.value;
+    }catch(e){ /* la clave puede no existir todavía; seguimos al respaldo local */ }
+  }
+  try{
+    const v = localStorage.getItem(localKeyFor(key));
+    if(v !== null) return v;
+    return localStorage.getItem(key); // compatibilidad con guardados locales previos al cambio
   }catch(e){ return null; }
 }
+
 async function storeSet(key, value){
-  try{
-    if(currentUser){ await setDoc(doc(db, 'users', currentUser.uid, 'kv', key), { value }); return; }
-    if(hasWidgetStorage){ await window.storage.set(key, value, false); return; }
-    localStorage.setItem(key, value);
-  }catch(e){ /* no bloquear la app si falla el guardado */ }
+  const result = { cloud:false, local:false, error:null };
+  if(currentUser){
+    try{
+      await setDoc(doc(db, 'users', currentUser.uid, 'kv', key), { value });
+      result.cloud = true;
+    }catch(e){
+      result.error = e;
+      console.warn('storeSet: falló el guardado en la nube para', key, e);
+    }
+  }
+  if(hasWidgetStorage){
+    try{ await window.storage.set(key, value, false); result.local = true; }
+    catch(e){ if(!result.error) result.error = e; }
+  } else {
+    try{ localStorage.setItem(localKeyFor(key), value); result.local = true; }
+    catch(e){ if(!result.error) result.error = e; }
+  }
+  return result;
 }
+
 async function storeDelete(key){
-  try{
-    if(currentUser){ await deleteDoc(doc(db, 'users', currentUser.uid, 'kv', key)); return; }
-    if(hasWidgetStorage){ await window.storage.delete(key, false); return; }
-    localStorage.removeItem(key);
-  }catch(e){}
+  if(currentUser){
+    try{ await deleteDoc(doc(db, 'users', currentUser.uid, 'kv', key)); }
+    catch(e){ console.warn('storeDelete: falló el borrado en la nube para', key, e); }
+  }
+  if(hasWidgetStorage){
+    try{ await window.storage.delete(key, false); }catch(e){}
+  } else {
+    try{ localStorage.removeItem(localKeyFor(key)); }catch(e){}
+  }
 }
 async function storeListKeys(prefix){
   try{
@@ -971,29 +1019,34 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
   settings.imageModel = document.getElementById('imageModel').value.trim() || 'gemini-2.5-flash-image';
   settings.language = document.getElementById('language').value;
   document.getElementById('headerLanguage').value = settings.language;
-  await storeSet('settings', JSON.stringify(settings));
+  const saveResult = await storeSet('settings', JSON.stringify(settings));
+  const syncNote = saveResult.cloud
+    ? ''
+    : (saveResult.local
+        ? ' (guardado solo en este dispositivo — no se pudo sincronizar con la nube' + (saveResult.error ? ': ' + saveResult.error.message : '') + ')'
+        : ' (⚠️ no se pudo guardar en ningún lado: ' + (saveResult.error ? saveResult.error.message : 'error desconocido') + ')');
 
   if(!settings.apiKey){
-    setStatus('settingsStatus','ok','Configuración guardada (sin clave de API todavía).');
+    setStatus('settingsStatus', saveResult.cloud || saveResult.local ? 'ok' : 'error', 'Configuración guardada (sin clave de API todavía).' + syncNote);
     return;
   }
-  setStatus('settingsStatus','loading','Configuración guardada. Verificando la conexión con Gemini...');
+  setStatus('settingsStatus','loading','Configuración guardada' + syncNote + '. Verificando la conexión con Gemini...');
   try{
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(settings.apiKey)}`);
     const data = await res.json();
     if(!res.ok){ throw new Error(friendlyGoogleError(data, res.status)); }
-    setStatus('settingsStatus','ok', 'Configuración guardada y conexión con Gemini establecida correctamente. ✅');
+    setStatus('settingsStatus','ok', 'Configuración guardada' + syncNote + ' y conexión con Gemini establecida correctamente. ✅');
   }catch(err){
-    setStatus('settingsStatus','error', 'La configuración se guardó, pero no se logró conectar correctamente:\n' + err.message);
+    setStatus('settingsStatus','error', 'La configuración se guardó' + syncNote + ', pero no se logró conectar correctamente:\n' + err.message);
   }
 });
 
 document.getElementById('deleteKeyBtn').addEventListener('click', async ()=>{
-  if(!confirm('¿Eliminar tu clave de API guardada en este navegador? Tendrás que volver a ingresarla para poder usar la app.')) return;
+  if(!confirm('¿Eliminar tu clave de API guardada? Tendrás que volver a ingresarla para poder usar la app.')) return;
   settings.apiKey = '';
   await storeSet('settings', JSON.stringify(settings));
   document.getElementById('apiKey').value = '';
-  setStatus('settingsStatus','ok','Tu clave de API fue eliminada de este navegador.');
+  setStatus('settingsStatus','ok','Tu clave de API fue eliminada.');
 });
 
 document.getElementById('loadModelsBtn').addEventListener('click', async ()=>{
@@ -1997,17 +2050,38 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
 
   // save
   card.querySelector('.act-save').addEventListener('click', async ()=>{
-    const id = savedId || ('r_' + Date.now());
-    await storeSet('recipe:'+id, JSON.stringify(recipe));
-    const idxRaw = await storeGet('recipe-index');
-    let idx = [];
-    try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
-    if(!idx.includes(id)) idx.push(id);
-    await storeSet('recipe-index', JSON.stringify(idx));
-    savedId = id;
+    const saveBtn = card.querySelector('.act-save');
     const statusEl = card.querySelector('.card-status');
-    statusEl.innerHTML = `<div class="status ok">✅<div>Receta guardada en "Mis Recetas".</div></div>`;
-    renderRecipesGrid();
+    saveBtn.disabled = true;
+    statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Guardando receta...</div></div>`;
+    try{
+      const id = savedId || ('r_' + Date.now());
+      const recipeResult = await storeSet('recipe:'+id, JSON.stringify(recipe));
+      const idxRaw = await storeGet('recipe-index');
+      let idx = [];
+      try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
+      if(!idx.includes(id)) idx.push(id);
+      const idxResult = await storeSet('recipe-index', JSON.stringify(idx));
+
+      if(!recipeResult.cloud && !recipeResult.local){
+        throw new Error((recipeResult.error && recipeResult.error.message) || 'No se pudo guardar en ningún lado.');
+      }
+
+      savedId = id;
+      renderRecipesGrid();
+      renderRecipeCard(recipe, container, {editable, saved:true, savedId:id, noAI});
+      const finalStatusEl = container.querySelector('.recipe-card .card-status');
+      if(recipeResult.cloud && idxResult.cloud){
+        finalStatusEl.innerHTML = `<div class="status ok">✅<div>Receta guardada en "Mis Recetas" y sincronizada en la nube.</div></div>`;
+      } else if(recipeResult.local || idxResult.local){
+        const errMsg = (recipeResult.error && recipeResult.error.message) || (idxResult.error && idxResult.error.message) || 'motivo desconocido';
+        finalStatusEl.innerHTML = `<div class="status info">💾<div>Receta guardada en este dispositivo. No se pudo sincronizar con la nube (${escapeHtml(errMsg)}). Si esto persiste, revisa las reglas de seguridad de Firestore.</div></div>`;
+      }
+    }catch(err){
+      statusEl.innerHTML = `<div class="status error">⚠️<div>No se pudo guardar la receta: ${escapeHtml(err.message)}</div></div>`;
+    }finally{
+      saveBtn.disabled = false;
+    }
   });
 
   // delete
@@ -2126,46 +2200,134 @@ function recipeToPlainText(recipe, scale){
   return out;
 }
 
+/* Corta un canvas alto en "páginas" recortando de verdad (drawImage con offset),
+   en vez de simplemente reposicionar la misma imagen completa — así nunca se
+   duplica ni se corta contenido a la mitad de forma ilegible. Solo se usa como
+   último recurso, para un bloque individual que por sí solo no cabe en una hoja. */
+function sliceCanvasToPages(canvas, contentWidthMM, maxHeightMM){
+  const pxPerMM = canvas.width / contentWidthMM;
+  const maxHeightPx = Math.max(1, Math.floor(maxHeightMM * pxPerMM));
+  const pieces = [];
+  let y = 0;
+  while(y < canvas.height){
+    const sliceHeightPx = Math.min(maxHeightPx, canvas.height - y);
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = canvas.width;
+    sliceCanvas.height = sliceHeightPx;
+    const ctx = sliceCanvas.getContext('2d');
+    ctx.fillStyle = '#f7f2e6';
+    ctx.fillRect(0,0,sliceCanvas.width, sliceCanvas.height);
+    ctx.drawImage(canvas, 0, y, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+    pieces.push({ dataUrl: sliceCanvas.toDataURL('image/jpeg', 0.92), heightMM: sliceHeightPx / pxPerMM });
+    y += sliceHeightPx;
+  }
+  return pieces;
+}
+
 async function downloadRecipeAsPDF(card, recipe){
   if(typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined'){
     throw new Error('No se pudieron cargar las librerías de PDF (revisa tu conexión a internet e intenta de nuevo).');
   }
-  const actionsEl = card.querySelector('.card-actions');
-  const statusElNode = card.querySelector('.card-status');
-  const holesEl = card.querySelector('.card-holes');
-  const prevActionsDisplay = actionsEl.style.display;
-  const prevStatusDisplay = statusElNode.style.display;
-  const prevHolesDisplay = holesEl ? holesEl.style.display : null;
-  actionsEl.style.display = 'none';
-  statusElNode.style.display = 'none';
-  if(holesEl) holesEl.style.display = 'none';
+
+  // Ancho fijo tipo "escritorio" para que el PDF se vea igual de bien venga de
+  // un celular angosto o de una pantalla grande — y para evitar que el texto
+  // se vea gigante/apretado como pasaba usando el ancho real de pantalla.
+  const PRINT_WIDTH = 760;
+  const printHost = document.createElement('div');
+  printHost.style.cssText = `position:fixed; left:-99999px; top:0; width:${PRINT_WIDTH}px; background:#f7f2e6; padding:20px 26px;`;
+  document.body.appendChild(printHost);
+
+  const bodySrc = card.querySelector('.card-body');
+  const clone = bodySrc.cloneNode(true);
+  // Quita todo lo interactivo/no imprimible.
+  clone.querySelectorAll('.card-actions, .card-status, .ing-sub-btn, .ing-sub-note, .servings-control .inc, .servings-control .dec').forEach(el=>el.remove());
+  clone.querySelectorAll('input[type=checkbox]').forEach(el=>el.remove());
+
+  // Descompone el contenido en bloques pequeños: cada ingrediente y cada paso
+  // se vuelve su propio bloque, así una hoja nunca corta a la mitad de un
+  // ingrediente o de un paso — el salto de página cae siempre entre bloques.
+  const blocks = [];
+  Array.from(clone.children).forEach(child=>{
+    if(child.matches('ul.ingredients')){
+      Array.from(child.children).forEach(li=>{
+        const wrap = document.createElement('ul');
+        wrap.className = 'ingredients';
+        wrap.appendChild(li);
+        blocks.push({ el: wrap, heading:false });
+      });
+    } else if(child.matches('ol.steps')){
+      Array.from(child.children).forEach(li=>{
+        const wrap = document.createElement('ol');
+        wrap.className = 'steps';
+        wrap.appendChild(li);
+        blocks.push({ el: wrap, heading:false });
+      });
+    } else {
+      blocks.push({ el: child, heading: child.classList.contains('section-title') });
+    }
+  });
 
   try{
-    const canvas = await html2canvas(card, { scale:2, backgroundColor:'#f7f2e6', useCORS:true });
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('p','mm','a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const margin = 12;
+    const contentWidthMM = pageWidth - margin*2;
+    const maxContentHeightMM = pageHeight - margin*2;
+    const gapMM = 3;
+    let cursorY = margin;
+    let pageHasContent = false;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-    while(heightLeft > 0){
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    for(const block of blocks){
+      printHost.innerHTML = '';
+      printHost.appendChild(block.el);
+      // eslint-disable-next-line no-await-in-loop
+      const canvas = await html2canvas(printHost, { scale:2, backgroundColor:'#f7f2e6', useCORS:true });
+      const blockHeightMM = (canvas.height * contentWidthMM) / canvas.width;
+
+      // Un encabezado de sección no debe quedar solo, huérfano, al final de una hoja:
+      // si no le queda espacio razonable debajo, mejor empujarlo a la siguiente hoja.
+      const minSpaceForHeading = 35;
+      const remaining = maxContentHeightMM - (cursorY - margin);
+
+      if(blockHeightMM > maxContentHeightMM){
+        // Bloque excepcionalmente alto (ej. una foto muy grande): se recorta de verdad,
+        // en vez de dejarlo ilegible o cortado a la mitad de forma incoherente.
+        if(pageHasContent && remaining < 15){ pdf.addPage(); cursorY = margin; pageHasContent = false; }
+        const pieces = sliceCanvasToPages(canvas, contentWidthMM, maxContentHeightMM - (cursorY - margin));
+        for(const piece of pieces){
+          if(cursorY - margin + piece.heightMM > maxContentHeightMM + 0.5 && pageHasContent){
+            pdf.addPage(); cursorY = margin; pageHasContent = false;
+          }
+          pdf.addImage(piece.dataUrl, 'JPEG', margin, cursorY, contentWidthMM, piece.heightMM);
+          cursorY += piece.heightMM;
+          pageHasContent = true;
+        }
+        cursorY += gapMM;
+        continue;
+      }
+
+      const needsNewPage = pageHasContent && (
+        (cursorY - margin) + blockHeightMM > maxContentHeightMM ||
+        (block.heading && remaining < minSpaceForHeading)
+      );
+      if(needsNewPage){
+        pdf.addPage();
+        cursorY = margin;
+        pageHasContent = false;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      pdf.addImage(imgData, 'JPEG', margin, cursorY, contentWidthMM, blockHeightMM);
+      cursorY += blockHeightMM + gapMM;
+      pageHasContent = true;
     }
+
     const safeName = (recipe.title || 'receta').replace(/[^\w\- ]/g,'').trim() || 'receta';
     pdf.save(safeName + '.pdf');
   } finally {
-    actionsEl.style.display = prevActionsDisplay;
-    statusElNode.style.display = prevStatusDisplay;
-    if(holesEl) holesEl.style.display = prevHolesDisplay;
+    printHost.remove();
   }
 }
 
