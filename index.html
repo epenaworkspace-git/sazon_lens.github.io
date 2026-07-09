@@ -832,15 +832,21 @@ let initializeApp, getAuth, onAuthStateChanged, createUserWithEmailAndPassword, 
     setPersistence, browserLocalPersistence,
     getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, enableIndexedDbPersistence;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA5MbdG5U6wX0z-wxtWKt_79kDVwrjYbM8",
-  authDomain: "sazon-lens.firebaseapp.com",
-  projectId: "sazon-lens",
-  storageBucket: "sazon-lens.firebasestorage.app",
-  messagingSenderId: "1098479710552",
-  appId: "1:1098479710552:web:11be3f1b24100087c2f52d",
-  measurementId: "G-49QKB6B9DP"
-};
+const firebaseConfig = (function(){
+  var LS_KEY = 'fbcfg_sazon_lens';
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch(e) { saved = null; }
+  if (saved && saved.apiKey) return saved;
+  var pasted = window.prompt('Configuracion de Firebase para Sazon Lens (solo la primera vez en este dispositivo).\nPega aqui el JSON de configuracion:');
+  if (pasted) {
+    try {
+      var cfg = JSON.parse(pasted);
+      localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+      return cfg;
+    } catch(e) { console.warn('Configuracion de Firebase invalida, la sincronizacion quedara desactivada.'); }
+  }
+  return { apiKey:'', authDomain:'', projectId:'', storageBucket:'', messagingSenderId:'', appId:'' };
+})();
 
 let fbApp=null, auth=null, db=null, fbBlocked=false;
 let currentUser = null;
