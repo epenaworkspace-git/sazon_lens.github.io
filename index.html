@@ -538,6 +538,9 @@
       <span>Continuar con Google</span>
     </button>
 
+    <div class="auth-divider"><span>o</span></div>
+    <button type="button" id="emailLinkBtn" class="ghost" style="align-self:center;">✉️ Enviarme un enlace de acceso por correo</button>
+
     <div id="authStatus"></div>
   </div>
 </div>
@@ -820,16 +823,14 @@
 
 <script type="module">
 /* ============================= FIREBASE ============================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail,
-  setPersistence, browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
-  enableIndexedDbPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+/* Imports dinámicos dentro de try/catch: si el entorno bloquea el SDK de Firebase
+   (ej. visor de artifacts de Claude, o sin internet), la app cae a modo local
+   automáticamente en vez de quedarse trabada en la pantalla de login. */
+let initializeApp, getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail,
+    sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
+    setPersistence, browserLocalPersistence,
+    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, enableIndexedDbPersistence;
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5MbdG5U6wX0z-wxtWKt_79kDVwrjYbM8",
@@ -840,15 +841,33 @@ const firebaseConfig = {
   appId: "1:1098479710552:web:11be3f1b24100087c2f52d",
   measurementId: "G-49QKB6B9DP"
 };
-const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
-const db = getFirestore(fbApp);
+
+let fbApp=null, auth=null, db=null, fbBlocked=false;
 let currentUser = null;
 
-/* Fuerza que la sesión y los datos persistan en este navegador/dispositivo,
-   para no depender del comportamiento por defecto del entorno (WebView, app, etc.). */
-setPersistence(auth, browserLocalPersistence).catch(()=>{ /* si falla, Firebase usa su persistencia por defecto */ });
+try{
+  ({initializeApp} = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"));
+  ({ getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+     GoogleAuthProvider, signInWithPopup, signOut, sendPasswordResetEmail,
+     sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
+     setPersistence, browserLocalPersistence
+  } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"));
+  ({ getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
+     enableIndexedDbPersistence
+  } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"));
+
+  fbApp = initializeApp(firebaseConfig);
+  auth = getAuth(fbApp);
+  db = getFirestore(fbApp);
+
+  /* Fuerza que la sesión y los datos persistan en este navegador/dispositivo,
+     para no depender del comportamiento por defecto del entorno (WebView, app, etc.). */
+  setPersistence(auth, browserLocalPersistence).catch(()=>{ /* si falla, Firebase usa su persistencia por defecto */ });
 enableIndexedDbPersistence(db).catch(()=>{ /* si falla (ej. modo incógnito o pestañas múltiples), seguimos con localStorage como respaldo */ });
+}catch(e){
+  console.warn('[Nube] Firebase no disponible (entorno bloqueado o sin internet) — la app sigue funcionando en modo local:', e);
+  fbBlocked = true;
+}
 
 function friendlyAuthError(err){
   const code = err && err.code;
@@ -2384,66 +2403,103 @@ document.querySelectorAll('.auth-tab-btn').forEach(btn=>{
   });
 });
 
-document.getElementById('authForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const btn = document.getElementById('authSubmitBtn');
-  btn.disabled = true;
-  setStatus('authStatus','loading', authMode==='login' ? 'Iniciando sesión...' : 'Creando tu cuenta...');
-  try{
-    if(authMode === 'login'){
-      await signInWithEmailAndPassword(auth, email, password);
-    } else {
-      await createUserWithEmailAndPassword(auth, email, password);
+if(!fbBlocked){
+  document.getElementById('authForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const btn = document.getElementById('authSubmitBtn');
+    btn.disabled = true;
+    setStatus('authStatus','loading', authMode==='login' ? 'Iniciando sesión...' : 'Creando tu cuenta...');
+    try{
+      if(authMode === 'login'){
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+      clearStatus('authStatus');
+    }catch(err){
+      setStatus('authStatus','error', friendlyAuthError(err));
+    }finally{
+      btn.disabled = false;
     }
-    clearStatus('authStatus');
-  }catch(err){
-    setStatus('authStatus','error', friendlyAuthError(err));
-  }finally{
-    btn.disabled = false;
-  }
-});
+  });
 
-document.getElementById('googleSignInBtn').addEventListener('click', async ()=>{
-  setStatus('authStatus','loading','Abriendo inicio de sesión de Google...');
-  try{
-    await signInWithPopup(auth, new GoogleAuthProvider());
-    clearStatus('authStatus');
-  }catch(err){
-    setStatus('authStatus','error', friendlyAuthError(err));
-  }
-});
+  document.getElementById('googleSignInBtn').addEventListener('click', async ()=>{
+    setStatus('authStatus','loading','Abriendo inicio de sesión de Google...');
+    try{
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      clearStatus('authStatus');
+    }catch(err){
+      setStatus('authStatus','error', friendlyAuthError(err));
+    }
+  });
 
-document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
-  const email = document.getElementById('authEmail').value.trim();
-  if(!email){ setStatus('authStatus','error','Escribe tu correo arriba primero, y luego presiona este botón.'); return; }
-  setStatus('authStatus','loading','Enviando correo de recuperación...');
-  try{
-    await sendPasswordResetEmail(auth, email);
-    setStatus('authStatus','ok', `Te enviamos un correo a ${email} con instrucciones para restablecer tu contraseña.`);
-  }catch(err){
-    setStatus('authStatus','error', friendlyAuthError(err));
-  }
-});
+  document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('authEmail').value.trim();
+    if(!email){ setStatus('authStatus','error','Escribe tu correo arriba primero, y luego presiona este botón.'); return; }
+    setStatus('authStatus','loading','Enviando correo de recuperación...');
+    try{
+      await sendPasswordResetEmail(auth, email);
+      setStatus('authStatus','ok', `Te enviamos un correo a ${email} con instrucciones para restablecer tu contraseña.`);
+    }catch(err){
+      setStatus('authStatus','error', friendlyAuthError(err));
+    }
+  });
 
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await signOut(auth);
-});
+  const EMAIL_LINK_KEY = 'sazonLensAuthEmail';
+  document.getElementById('emailLinkBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('authEmail').value.trim();
+    if(!email){ setStatus('authStatus','error','Escribe tu correo arriba primero, y luego presiona este botón.'); return; }
+    setStatus('authStatus','loading','Enviando enlace de acceso...');
+    try{
+      await sendSignInLinkToEmail(auth, email, { url: window.location.href.split('#')[0], handleCodeInApp: true });
+      window.localStorage.setItem(EMAIL_LINK_KEY, email);
+      setStatus('authStatus','ok', `Te enviamos un enlace a ${email}. Ábrelo desde este mismo navegador para entrar, sin contraseña.`);
+    }catch(err){
+      setStatus('authStatus','error', friendlyAuthError(err));
+    }
+  });
 
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-  if(user){
-    document.getElementById('authGate').hidden = true;
-    document.getElementById('appShell').hidden = false;
-    document.getElementById('userEmailLabel').textContent = user.email || '';
-    await loadSettings();
-    renderRecipesGrid();
-  } else {
-    document.getElementById('appShell').hidden = true;
-    document.getElementById('authGate').hidden = false;
-  }
-});
+  document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+    await signOut(auth);
+  });
+
+  // Si el usuario llegó aquí desde el enlace de acceso que le enviamos por correo, completa el login.
+  (async ()=>{
+    try{
+      if(isSignInWithEmailLink(auth, window.location.href)){
+        let email = window.localStorage.getItem(EMAIL_LINK_KEY);
+        if(!email) email = window.prompt('Confirma tu correo para completar el acceso:');
+        if(email){
+          await signInWithEmailLink(auth, email, window.location.href);
+          window.localStorage.removeItem(EMAIL_LINK_KEY);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    }catch(e){ console.warn('[Nube] No se pudo completar el acceso por enlace:', e); }
+  })();
+
+  onAuthStateChanged(auth, async (user)=>{
+    currentUser = user;
+    if(user){
+      document.getElementById('authGate').hidden = true;
+      document.getElementById('appShell').hidden = false;
+      document.getElementById('userEmailLabel').textContent = user.email || '';
+      await loadSettings();
+      renderRecipesGrid();
+    } else {
+      document.getElementById('appShell').hidden = true;
+      document.getElementById('authGate').hidden = false;
+    }
+  });
+} else {
+  // Firebase bloqueado (ej. visor de artifacts o sin internet): la app funciona 100% en modo local, sin exigir login.
+  document.getElementById('authGate').hidden = true;
+  document.getElementById('appShell').hidden = false;
+  await loadSettings();
+  renderRecipesGrid();
+}
 
 /* ============================= INIT ============================= */
 /* La carga de configuración y recetas ahora se dispara automáticamente
