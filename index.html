@@ -837,14 +837,22 @@ const firebaseConfig = (function(){
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch(e) { saved = null; }
   if (saved && saved.apiKey) return saved;
-  var pasted = window.prompt('Configuracion de Firebase para Sazon Lens (solo la primera vez en este dispositivo).\nPega aqui el JSON de configuracion:');
-  if (pasted) {
+  for (var intento = 0; intento < 3; intento++) {
+    var pasted = window.prompt('Configuracion de Firebase para Sazon Lens (solo la primera vez en este dispositivo).\nPega aqui el JSON de configuracion (debe empezar con { y las comillas en los nombres de los campos):');
+    if (!pasted) break;
     try {
       var cfg = JSON.parse(pasted);
+      if (!cfg.apiKey) {
+        window.alert('Ese texto es JSON valido pero le falta el campo "apiKey". Revisa que copiaste el bloque completo e intenta de nuevo.');
+        continue;
+      }
       localStorage.setItem(LS_KEY, JSON.stringify(cfg));
       return cfg;
-    } catch(e) { console.warn('Configuracion de Firebase invalida, la sincronizacion quedara desactivada.'); }
+    } catch(e) {
+      window.alert('El texto pegado no es un JSON valido. Debe verse asi (con comillas en TODOS los nombres de campo):\n{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}\n\nIntenta de nuevo.');
+    }
   }
+  window.alert('No se configuro Firebase para Sazon Lens. La app seguira funcionando localmente, sin sincronizacion, hasta que recargues la pagina y lo captures correctamente.');
   return { apiKey:'', authDomain:'', projectId:'', storageBucket:'', messagingSenderId:'', appId:'' };
 })();
 
