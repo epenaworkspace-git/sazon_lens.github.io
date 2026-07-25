@@ -1141,23 +1141,29 @@ function populateModelSelects(models, {preserveSelection} = {}){
   const prevImage = preserveSelection ? imageSelect.value : null;
 
   const textNames = [];
-  const imageNames = [];
+  const imageNamesGenerateContent = []; // ej. gemini-2.5-flash-image (más simples/confiables)
+  const imageNamesPredictOnly = [];     // familia Imagen (imagen-3.0-*, imagen-4.0-*): usan :predict
 
   models.forEach(m=>{
     const shortName = m.name.replace('models/','');
     const methods = m.supportedGenerationMethods || [];
     const looksLikeImageModel = /imagen|image/i.test(shortName) || methods.includes('predict');
     if(looksLikeImageModel){
-      imageNames.push(shortName);
+      if(methods.includes('generateContent')){
+        imageNamesGenerateContent.push(shortName);
+      } else {
+        imageNamesPredictOnly.push(shortName);
+      }
     } else if(methods.includes('generateContent')){
       textNames.push(shortName);
     }
   });
 
-  // Ordena alfabéticamente pero deja arriba a los modelos "flash"/"pro" más
-  // recientes suele ser difícil de adivinar de forma genérica, así que se
-  // conserva simplemente el orden que entrega la API (normalmente ya trae
-  // las versiones más nuevas primero) y solo se eliminan duplicados.
+  // Los modelos de imagen que funcionan por generateContent (ej. gemini-2.5-flash-image,
+  // también conocido como "Nano Banana") van primero por ser los más simples y confiables;
+  // los de la familia Imagen (que solo funcionan por :predict) quedan disponibles después.
+  const imageNames = imageNamesGenerateContent.concat(imageNamesPredictOnly);
+
   fillSelectWithModels(textSelect, dedupe(textNames), prevText || settings.textModel);
   fillSelectWithModels(imageSelect, dedupe(imageNames), prevImage || settings.imageModel);
 
@@ -1437,8 +1443,26 @@ function extractTextFromResponse(data){
   return textPart.text;
 }
 
+/* La familia "Imagen" de Google (imagen-3.0-*, imagen-4.0-*, etc.) NO soporta
+   el endpoint generateContent — solo funciona a través de un endpoint distinto
+   llamado ":predict", con un formato de petición y de respuesta totalmente
+   diferente. Si se le llama con generateContent (como a un modelo Gemini
+   normal) siempre falla. Por eso hay que detectarla y tratarla aparte. */
+function isImagenPredictModel(modelName){
+  return /^imagen[-_]/i.test(modelName || '');
+}
+
 async function generateDishImage(recipe){
   const prompt = `Fotografía de comida, estilo editorial de cocina, luz natural, del siguiente plato: "${recipe.title}". ${recipe.summary || ''}. Ingredientes principales: ${recipe.ingredients.slice(0,6).map(i=>i.item).join(', ')}. Vista cenital o a 45 grados, plato servido y listo para comer, fondo simple.`;
+
+  if(!settings.imageModel || !settings.imageModel.trim()){
+    throw new Error('No hay ningún modelo de imagen elegido. Ve a Configuración, pulsa "🔄 Actualizar lista de modelos" y selecciona uno en el menú "Modelo de generación de imágenes" (se recomienda "gemini-2.5-flash-image").');
+  }
+
+  if(isImagenPredictModel(settings.imageModel)){
+    return await generateImageViaPredict(settings.imageModel, prompt);
+  }
+
   try{
     return await tryGenerateImage({
       contents: [{ role:'user', parts:[{ text: prompt }] }],
@@ -1461,9 +1485,33 @@ async function tryGenerateImage(body){
   const cand = data && data.candidates && data.candidates[0];
   const parts = (cand && cand.content && cand.content.parts) || [];
   const imgPart = parts.find(p=>p.inlineData || p.inline_data);
-  if(!imgPart) throw new Error('El modelo de imágenes no devolvió ninguna imagen. Verifica en Configuración que el modelo de imagen sea correcto para tu clave (usa "Actualizar lista de modelos" y elige uno que incluya "image" o "imagen" en el nombre).');
+  if(!imgPart) throw new Error('El modelo de imágenes no devolvió ninguna imagen. Verifica en Configuración que el modelo de imagen sea correcto para tu clave (usa "🔄 Actualizar lista de modelos" y elige uno que incluya "image" en el nombre, por ejemplo "gemini-2.5-flash-image").');
   const inline = imgPart.inlineData || imgPart.inline_data;
   return `data:${inline.mimeType || inline.mime_type || 'image/png'};base64,${inline.data}`;
+}
+
+/* Llama al endpoint :predict que usan los modelos de la familia Imagen.
+   Formato de petición: { instances:[{prompt}], parameters:{sampleCount} }.
+   Formato de respuesta: { predictions:[{ bytesBase64Encoded, mimeType }] }. */
+async function generateImageViaPredict(model, prompt){
+  if(!settings.apiKey) throw new Error('Falta tu clave de API de Gemini. Ve a la pestaña Configuración y agrégala (es gratis).');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:predict?key=${encodeURIComponent(settings.apiKey)}`;
+  const body = { instances: [{ prompt }], parameters: { sampleCount: 1 } };
+  let res, data;
+  try{
+    res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  }catch(networkErr){
+    throw new Error('No se pudo conectar con Gemini para generar la imagen. Revisa tu conexión a internet.');
+  }
+  try{ data = await res.json(); }
+  catch(e){ throw new Error('Google respondió con un formato inesperado al generar la imagen.'); }
+  if(!res.ok){ throw new Error(friendlyGoogleError(data, res.status)); }
+
+  const prediction = data && data.predictions && data.predictions[0];
+  const b64 = prediction && (prediction.bytesBase64Encoded || prediction.bytesBase64);
+  if(!b64) throw new Error('El modelo Imagen no devolvió ninguna imagen (puede que tu clave no tenga acceso a esta familia de modelos todavía). Prueba eligiendo "gemini-2.5-flash-image" en su lugar.');
+  const mime = prediction.mimeType || 'image/png';
+  return `data:${mime};base64,${b64}`;
 }
 
 /* ============================= EXTRACT FLOW ============================= */
