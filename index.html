@@ -504,6 +504,21 @@
   .cat-manage-row input{ flex:1; min-width:160px; }
   .cat-chip-remove{ margin-left:6px; opacity:.75; background:none; border:none; padding:0; box-shadow:none; color:inherit; font-size:12px; }
   .cat-chip-remove:hover{ opacity:1; background:none; box-shadow:none; transform:none; }
+  .cat-emoji-btn{
+    background:none; border:none; box-shadow:none; padding:0; margin-right:4px;
+    font-size:15px; line-height:1; cursor:pointer; transform:none;
+  }
+  .cat-emoji-btn:hover{ transform:scale(1.2); box-shadow:none; background:none; }
+  .emoji-picker-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(38px,1fr)); gap:4px;
+    max-height:220px; overflow-y:auto; margin-top:10px; padding:8px;
+    background:var(--paper-dark); border-radius:10px; border:1px solid var(--line);
+  }
+  .emoji-picker-item{
+    background:none; border:none; box-shadow:none; font-size:20px; padding:4px;
+    border-radius:8px; cursor:pointer; transform:none;
+  }
+  .emoji-picker-item:hover{ background:#fffdf8; box-shadow:none; transform:scale(1.15); }
   .cat-filter-bar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:center; }
 
   /* ---------- Video de origen ---------- */
@@ -528,6 +543,7 @@
   .video-link-line{ font-size:12.5px; color:var(--ink-soft); word-break:break-all; }
 
   /* ---------- My recipes ---------- */
+  #categoryFilterPanel{ margin-top:14px; margin-bottom:14px; }
   #recipesGrid.accordion{ margin-top:14px; }
   #recipesGrid .accordion-item.recipe-group{ background:var(--paper-card); }
   #recipesGrid .accordion-header{ padding:14px 16px; }
@@ -829,8 +845,19 @@
   <!-- MY RECIPES TAB -->
   <section id="tab-myrecipes" class="tab-panel">
     <div class="intro"><p>Tus recetas guardadas, listas para cocinar cuando quieras.</p></div>
-    <div class="cat-filter-bar" id="categoryFilterBar"></div>
-    <div id="categoryManagePanel" hidden></div>
+
+    <div class="accordion-item" id="categoryFilterPanel">
+      <button type="button" class="accordion-header" id="categoryFilterToggle">
+        <span class="acc-icon">🔎</span>
+        <span class="acc-title">Filtrar por categoría</span>
+        <span class="acc-chevron">▾</span>
+      </button>
+      <div class="accordion-body">
+        <div class="cat-filter-bar" id="categoryFilterBar"></div>
+        <div id="categoryManagePanel" hidden></div>
+      </div>
+    </div>
+
     <div class="accordion" id="recipesGrid"></div>
     <p class="empty-state" id="emptyRecipes" hidden>Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".</p>
   </section>
@@ -1136,6 +1163,9 @@ let currentRecipe = null; // recipe currently shown in Extract tab
 let currentImageBase64 = null;
 
 /* ============================= TABS ============================= */
+document.getElementById('categoryFilterToggle').addEventListener('click', ()=>{
+  document.getElementById('categoryFilterPanel').classList.toggle('open');
+});
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -2495,7 +2525,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
   const accordionSections = [
     recipe.summary ? accordionItem(recipe, 'summary', 'i', 'Resumen', `<p class="card-summary" style="margin-top:0;">${escapeHtml(recipe.summary)}</p>`, true) : '',
 
-    accordionItem(recipe, 'category', '🏷', assignedCat ? `Categoría: ${escapeHtml(assignedCat.name)}` : 'Categoría', `<div class="cat-picker-slot"></div>`, false),
+    accordionItem(recipe, 'category', assignedCat ? (assignedCat.emoji || categoryEmoji(assignedCat.name)) : '🏷', assignedCat ? `Categoría: ${escapeHtml(assignedCat.name)}` : 'Categoría', `<div class="cat-picker-slot"></div>`, false),
 
     isVideoSourced ? accordionItem(recipe, 'video', '▶', 'Video de origen', `
       <div class="video-source-field">
@@ -2606,11 +2636,12 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
       selectedId: recipe.category || null,
       onSelect: (id)=>{
         recipe.category = id;
-        const header = card.querySelector('.accordion-item[data-section="category"] .acc-title');
-        if(header){
-          const cat = id ? findCategory(id) : null;
-          header.textContent = cat ? `Categoría: ${cat.name}` : 'Categoría';
-        }
+        const item = card.querySelector('.accordion-item[data-section="category"]');
+        const header = item?.querySelector('.acc-title');
+        const iconEl = item?.querySelector('.acc-icon');
+        const cat = id ? findCategory(id) : null;
+        if(header) header.textContent = cat ? `Categoría: ${cat.name}` : 'Categoría';
+        if(iconEl) iconEl.textContent = cat ? (cat.emoji || categoryEmoji(cat.name)) : '🏷';
       }
     });
   }
@@ -2985,6 +3016,161 @@ function slugify(str){
   return String(str||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
 
+function normText(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+/* Emoji representativo para cada categoría PREDETERMINADA (por nombre
+   normalizado). Se usa para las 32 categorías de fábrica. */
+const CATEGORY_EMOJI = {
+  'mexicana': '🌮', 'rapido y facil': '⚡', 'entradas': '🍤', 'bebidas': '🥤',
+  'tabla de embutidos': '🧀', 'fiesta': '🎉', 'bajo en carbohidratos': '🥦',
+  'a la parrilla': '🔥', 'vegetariana': '🥬', 'india': '🍛', 'sin lacteos': '🥛',
+  'olla de coccion lenta': '🍲', 'asiatica': '🍜', 'mediterranea': '🫒',
+  'postre': '🍰', 'italiana': '🍝', 'vegana': '🌱', 'entrante': '🥟',
+  'ensaladas': '🥗', 'dias festivos': '🎄', 'guarniciones': '🍚', 'cena': '🍽️',
+  'desayuno': '🍳', 'sopas y guisos': '🥣', 'almuerzo': '🍱',
+  'panes y bollos': '🥖', 'salsas y aderezos': '🥫', 'medio oriente': '🧆',
+  'bocadillos': '🥪', 'horneados': '🧁', 'francesa': '🥐', 'sin gluten': '🌾'
+};
+function categoryEmoji(name){ return CATEGORY_EMOJI[normText(name)] || '🍽️'; }
+
+/* ---------- Base de datos interna de emojis ----------
+   No se muestra como tal en ninguna pantalla: solo se usa internamente para
+   (a) sugerir automáticamente un emoji cuando el usuario crea una categoría
+   nueva, comparando el nombre contra las palabras clave de cada entrada, y
+   (b) alimentar el buscador del selector de emoji, para cuando el usuario
+   prefiera elegir uno distinto manualmente tocando el emoji de la categoría
+   dentro de "Administrar categorías". */
+const EMOJI_DATABASE = [
+  { emoji:'🌮', keywords:['taco','tacos','mexicana','mexicano','mexico'] },
+  { emoji:'🌯', keywords:['burrito','wrap','envuelto'] },
+  { emoji:'🫔', keywords:['tamal','tamales','hoja de maiz'] },
+  { emoji:'🥙', keywords:['shawarma','gyro','pita rellena','doner'] },
+  { emoji:'🫓', keywords:['pita','flatbread','tortilla arabe','naan'] },
+  { emoji:'🧆', keywords:['falafel','medio oriente','arabe','kebab','kofta'] },
+  { emoji:'🍝', keywords:['pasta','italiana','italiano','spaghetti','fideos','carbonara','lasagna'] },
+  { emoji:'🍕', keywords:['pizza'] },
+  { emoji:'🥐', keywords:['croissant','francesa','frances','pasteleria francesa'] },
+  { emoji:'🥖', keywords:['baguette','pan','panes','bollo','bolleria','masa madre'] },
+  { emoji:'🍞', keywords:['pan de molde','tostada','sandwich bread'] },
+  { emoji:'🧇', keywords:['waffle','gofre'] },
+  { emoji:'🥞', keywords:['pancake','hotcake','panqueque','crepa','crepe'] },
+  { emoji:'🍳', keywords:['huevo','huevos','desayuno','breakfast','omelette'] },
+  { emoji:'🥓', keywords:['tocino','bacon','panceta'] },
+  { emoji:'🌭', keywords:['hotdog','perro caliente','salchicha'] },
+  { emoji:'🍔', keywords:['hamburguesa','burger'] },
+  { emoji:'🥪', keywords:['sandwich','sándwich','torta','bocadillo','emparedado'] },
+  { emoji:'🌰', keywords:['embutido','charcuteria','charcutería','jamon','salami','tabla de quesos','carnes frias'] },
+  { emoji:'🧀', keywords:['queso','quesos','cheese','lacteo'] },
+  { emoji:'🥩', keywords:['carne','res','bistec','steak','filete'] },
+  { emoji:'🍖', keywords:['costilla','carne asada','bbq'] },
+  { emoji:'🍗', keywords:['pollo','chicken','ave','pavo'] },
+  { emoji:'🥓', keywords:['tocineta'] },
+  { emoji:'🐟', keywords:['pescado','fish','pescados'] },
+  { emoji:'🦐', keywords:['camaron','camarón','gamba','shrimp'] },
+  { emoji:'🦞', keywords:['langosta','marisco','mariscos','seafood'] },
+  { emoji:'🦀', keywords:['cangrejo','crab'] },
+  { emoji:'🐙', keywords:['pulpo','octopus'] },
+  { emoji:'🍣', keywords:['sushi','japonesa','japones','sashimi'] },
+  { emoji:'🍱', keywords:['bento','almuerzo','lunch','fiambrera'] },
+  { emoji:'🍙', keywords:['onigiri','bola de arroz'] },
+  { emoji:'🍚', keywords:['arroz','rice','guarnicion','guarnición','acompañamiento'] },
+  { emoji:'🍜', keywords:['ramen','noodles','fideos asiaticos','sopa asiatica','asiatica','asiático','wok'] },
+  { emoji:'🍲', keywords:['guiso','estofado','stew','cocido','olla de coccion lenta','slow cooker'] },
+  { emoji:'🥘', keywords:['paella','cazuela','sarten','sartén'] },
+  { emoji:'🥣', keywords:['sopa','caldo','crema','soup','cereal'] },
+  { emoji:'🍛', keywords:['curry','india','indio','masala','tikka'] },
+  { emoji:'🫒', keywords:['aceituna','mediterranea','mediterráneo','griega','griego','olivo'] },
+  { emoji:'🥗', keywords:['ensalada','salad','verduras','vegetales'] },
+  { emoji:'🥦', keywords:['brocoli','brócoli','bajo en carbohidratos','low carb','keto','vegetal'] },
+  { emoji:'🥕', keywords:['zanahoria','carrot'] },
+  { emoji:'🌽', keywords:['elote','maiz','maíz','corn'] },
+  { emoji:'🧄', keywords:['ajo','garlic'] },
+  { emoji:'🧅', keywords:['cebolla','onion'] },
+  { emoji:'🥑', keywords:['aguacate','palta','avocado','guacamole'] },
+  { emoji:'🍄', keywords:['champinon','champiñón','hongo','seta','mushroom'] },
+  { emoji:'🥔', keywords:['papa','patata','potato'] },
+  { emoji:'🍆', keywords:['berenjena','eggplant'] },
+  { emoji:'🫑', keywords:['pimiento','chile','pepper'] },
+  { emoji:'🌶️', keywords:['picante','chile picante','spicy','salsa picante'] },
+  { emoji:'🥒', keywords:['pepino','cucumber'] },
+  { emoji:'🥬', keywords:['vegetariana','vegetariano','lechuga','verdura de hoja'] },
+  { emoji:'🌱', keywords:['vegana','vegano','vegan','plant based'] },
+  { emoji:'🥫', keywords:['salsa','aderezo','dressing','vinagreta','dip','conserva'] },
+  { emoji:'🍯', keywords:['miel','honey'] },
+  { emoji:'🧈', keywords:['mantequilla','butter'] },
+  { emoji:'🧂', keywords:['sal','condimento','sazon','sazón','especias','seasoning'] },
+  { emoji:'🥛', keywords:['leche','milk','lacteo','sin lacteos','sin lácteos','dairy'] },
+  { emoji:'🥥', keywords:['coco','coconut'] },
+  { emoji:'🌾', keywords:['gluten','sin gluten','trigo','avena','grano'] },
+  { emoji:'🍦', keywords:['helado','icecream','nieve'] },
+  { emoji:'🍨', keywords:['copa helada','sundae'] },
+  { emoji:'🍧', keywords:['raspado','shaved ice','granizado'] },
+  { emoji:'🍩', keywords:['dona','donut','rosquilla'] },
+  { emoji:'🍪', keywords:['galleta','cookie'] },
+  { emoji:'🎂', keywords:['pastel','tarta de cumpleaños','birthday cake','cumpleaños'] },
+  { emoji:'🧁', keywords:['cupcake','muffin','horneado','horno','baked','pastelito'] },
+  { emoji:'🥧', keywords:['pay','pie','tarta'] },
+  { emoji:'🍫', keywords:['chocolate'] },
+  { emoji:'🍬', keywords:['dulce','caramelo','candy','postre'] },
+  { emoji:'🍭', keywords:['paleta','lollipop'] },
+  { emoji:'🍮', keywords:['flan','pudin','budin','pudín','cheesecake'] },
+  { emoji:'🍎', keywords:['manzana','apple','fruta'] },
+  { emoji:'🍊', keywords:['naranja','orange','citrico','cítrico'] },
+  { emoji:'🍋', keywords:['limon','limón','lemon'] },
+  { emoji:'🍌', keywords:['platano','plátano','banana'] },
+  { emoji:'🍉', keywords:['sandia','sandía','watermelon'] },
+  { emoji:'🍇', keywords:['uva','uvas','grapes'] },
+  { emoji:'🍓', keywords:['fresa','strawberry'] },
+  { emoji:'🫐', keywords:['arandano','arándano','blueberry'] },
+  { emoji:'🍒', keywords:['cereza','cherry'] },
+  { emoji:'🍑', keywords:['durazno','melocoton','melocotón','peach'] },
+  { emoji:'🥭', keywords:['mango'] },
+  { emoji:'🍍', keywords:['piña','pina','pineapple'] },
+  { emoji:'🥝', keywords:['kiwi'] },
+  { emoji:'🍐', keywords:['pera','pear'] },
+  { emoji:'🥤', keywords:['bebida','refresco','soda','smoothie','licuado','jugo','malteada','batido'] },
+  { emoji:'🧃', keywords:['jugo de caja','juice box'] },
+  { emoji:'🧋', keywords:['boba','bubble tea','te de burbujas'] },
+  { emoji:'☕', keywords:['cafe','café','coffee','espresso'] },
+  { emoji:'🍵', keywords:['te','té','tea','matcha'] },
+  { emoji:'🍶', keywords:['sake'] },
+  { emoji:'🍷', keywords:['vino','wine'] },
+  { emoji:'🍸', keywords:['coctel','cóctel','cocktail','martini'] },
+  { emoji:'🍹', keywords:['bebida tropical','margarita','pina colada','piña colada'] },
+  { emoji:'🍺', keywords:['cerveza','beer'] },
+  { emoji:'🥂', keywords:['brindis','champan','champán','toast'] },
+  { emoji:'🥃', keywords:['whisky','whiskey','tequila','mezcal'] },
+  { emoji:'🎉', keywords:['fiesta','party','celebracion','celebración','antojito','picoteo'] },
+  { emoji:'🎄', keywords:['navidad','navideño','christmas'] },
+  { emoji:'🎃', keywords:['halloween','calabaza'] },
+  { emoji:'🎆', keywords:['ano nuevo','año nuevo','new year','festivo','dias festivos','días festivos'] },
+  { emoji:'❤️', keywords:['amor','san valentin','san valentín','romantico','romántico'] },
+  { emoji:'🔥', keywords:['parrilla','asado','grill','a la parrilla','asador','carbon','carbón','bbq','picante extremo'] },
+  { emoji:'♨️', keywords:['vapor','al vapor','steamed'] },
+  { emoji:'⚡', keywords:['rapido','rápido','facil','fácil','rapido y facil','quick','express'] },
+  { emoji:'🧊', keywords:['frio','frío','congelado','frozen','helado bebida'] },
+  { emoji:'🍽️', keywords:['cena','comida','plato fuerte','dinner','almuerzo','entrante','entrada'] }
+];
+/* Elige el emoji más adecuado de la base de datos para un nombre de
+   categoría dado, comparando palabras clave. Si no encuentra ninguna
+   coincidencia razonable, devuelve un plato genérico. */
+function inferEmojiForName(name){
+  const norm = normText(name);
+  if(!norm) return '🍽️';
+  let bestEmoji = null, bestScore = 0;
+  for(const entry of EMOJI_DATABASE){
+    let score = 0;
+    for(const kw of entry.keywords){
+      const nkw = normText(kw);
+      if(!nkw) continue;
+      if(norm === nkw) score += 5;
+      else if(norm.includes(nkw) || nkw.includes(norm)) score += 2;
+    }
+    if(score > bestScore){ bestScore = score; bestEmoji = entry.emoji; }
+  }
+  return bestEmoji || '🍽️';
+}
+
 const DEFAULT_CATEGORY_NAMES = [
   'Mexicana','Rápido y fácil','Entradas','Bebidas','Tabla de embutidos','Fiesta','Bajo en carbohidratos',
   'A la parrilla','Vegetariana','India','Sin lácteos','Olla de cocción lenta','Asiática','Mediterránea','Postre',
@@ -2992,7 +3178,7 @@ const DEFAULT_CATEGORY_NAMES = [
   'Almuerzo','Panes y bollos','Salsas y aderezos','Medio Oriente','Bocadillos','Horneados','Francesa','Sin gluten'
 ];
 const DEFAULT_CATEGORIES = DEFAULT_CATEGORY_NAMES.map((name, i)=>({
-  id: 'cat_' + slugify(name), name, color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]
+  id: 'cat_' + slugify(name), name, color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length], emoji: categoryEmoji(name)
 }));
 
 let categories = [];
@@ -3009,16 +3195,64 @@ async function loadCategories(){
   if(categoriesLoaded) return categories;
   const raw = await storeGet('categories');
   if(raw){
-    try{ categories = JSON.parse(raw); }catch(e){ categories = DEFAULT_CATEGORIES.slice(); }
+    try{ categories = JSON.parse(raw); }catch(e){ categories = DEFAULT_CATEGORIES.map(c=>({...c})); }
   } else {
-    categories = DEFAULT_CATEGORIES.slice();
+    categories = DEFAULT_CATEGORIES.map(c=>({...c}));
     await storeSet('categories', JSON.stringify(categories));
   }
+  // Migración: si alguna categoría guardada de una versión anterior no tiene
+  // emoji asignado, se le infiere uno automáticamente ahora.
+  let migrated = false;
+  categories.forEach(c=>{ if(!c.emoji){ c.emoji = categoryEmoji(c.name) || inferEmojiForName(c.name); migrated = true; } });
+  if(migrated) await storeSet('categories', JSON.stringify(categories));
   categoriesLoaded = true;
+  await recordCategorySnapshot();
   return categories;
 }
 
-async function saveCategories(){ await storeSet('categories', JSON.stringify(categories)); }
+async function saveCategories(){
+  await storeSet('categories', JSON.stringify(categories));
+  await recordCategorySnapshot();
+}
+
+/* ---------- Puntos de restauración de categorías ----------
+   Cada vez que las categorías cambian (o se cargan por primera vez en la
+   sesión) se guarda una "foto" con fecha y hora, similar a un punto de
+   restauración de Windows. Así se puede volver al estado que tenían en un
+   día específico. Se conservan como máximo los últimos 200 puntos. */
+async function recordCategorySnapshot(){
+  let history = [];
+  try{ const raw = await storeGet('categories-history'); history = raw ? JSON.parse(raw) : []; }catch(e){ history = []; }
+  history.push({ ts: Date.now(), categories: categories.map(c=>({...c})) });
+  if(history.length > 200) history = history.slice(history.length - 200);
+  await storeSet('categories-history', JSON.stringify(history));
+}
+
+async function loadCategoryHistory(){
+  try{ const raw = await storeGet('categories-history'); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+}
+
+/* Restaura las categorías al último punto de restauración guardado en o
+   antes del final del día seleccionado (formato 'YYYY-MM-DD'). */
+async function restoreCategoriesToDate(dateStr){
+  if(!dateStr){ setStatus('categoryManageStatusArea','error','Elige primero una fecha.'); return; }
+  const history = await loadCategoryHistory();
+  if(!history.length){ setStatus('categoryManageStatusArea','error','Todavía no hay puntos de restauración guardados.'); return; }
+  const endOfDay = new Date(dateStr + 'T23:59:59.999').getTime();
+  const candidates = history.filter(h=>h.ts <= endOfDay);
+  if(!candidates.length){ setStatus('categoryManageStatusArea','error','No hay ningún punto de restauración en o antes de esa fecha.'); return; }
+  const snap = candidates[candidates.length - 1];
+  const whenLabel = new Date(snap.ts).toLocaleString();
+  if(!confirm(`¿Restaurar las categorías al estado que tenían el ${whenLabel}? Esto reemplazará tu lista actual de categorías.`)) return;
+  categories = snap.categories.map(c=>({...c}));
+  deletedCategoryStack = [];
+  activeCategoryFilter = null;
+  await saveCategories();
+  renderCategoryManagePanel();
+  renderCategoryFilterBar();
+  renderRecipesGrid();
+  setStatus('categoryManageStatusArea','ok', `Categorías restauradas al punto del ${whenLabel}.`);
+}
 
 function findCategory(id){ return categories.find(c=>c.id===id) || null; }
 
@@ -3060,7 +3294,6 @@ const CATEGORY_KEYWORDS = {
   'francesa': ['francesa','francés','frances','croissant','quiche','ratatouille'],
   'sin gluten': ['sin gluten','gluten free']
 };
-function normText(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function inferCategoryId(recipe){
   if(!categories.length) return null;
   const haystack = normText([
@@ -3177,7 +3410,7 @@ function renderCategoryManagePanel(){
   panel.innerHTML = `
     <div class="plan-summary" style="margin-top:0 0 14px 0;">
       <h3 style="font-size:16px; margin-bottom:10px;">Administrar categorías</h3>
-      <p class="card-summary" style="margin-top:0;">Toca la ✕ para eliminar una categoría (las recetas que la tengan asignada quedarán "Sin categoría").</p>
+      <p class="card-summary" style="margin-top:0;">Toca el emoji para cambiarlo, o la ✕ para eliminar una categoría (las recetas que la tengan asignada quedarán "Sin categoría").</p>
       <div class="cat-chip-grid" id="manageCatGrid"></div>
       <div class="cat-manage-row">
         <input type="text" id="newCategoryInput" placeholder="Nueva categoría...">
@@ -3187,6 +3420,17 @@ function renderCategoryManagePanel(){
         <button type="button" class="secondary" id="undoDeleteCategoryBtn" ${deletedCategoryStack.length ? '' : 'disabled'}>↩️ Deshacer eliminación${deletedCategoryStack.length ? ' (' + deletedCategoryStack.length + ')' : ''}</button>
         <button type="button" class="secondary" id="resetCategoriesBtn">🔄 Restaurar categorías predeterminadas</button>
       </div>
+      <div class="cat-manage-row" style="margin-top:10px; align-items:center;">
+        <span style="font-size:13px; color:var(--ink-soft); white-space:nowrap;">🕘 Punto de restauración:</span>
+        <input type="date" id="restoreDateInput" max="${new Date().toISOString().slice(0,10)}">
+        <button type="button" class="secondary" id="restoreByDateBtn">📅 Restaurar a esa fecha</button>
+      </div>
+      <div id="emojiPickerSection" hidden style="margin-top:14px; border-top:1px solid var(--line); padding-top:14px;">
+        <p class="card-summary" style="margin-top:0;">Elige un nuevo emoji para "<strong id="emojiPickerCatName"></strong>":</p>
+        <input type="text" id="emojiPickerSearch" placeholder="Buscar (ej: pollo, dulce, picante)...">
+        <div class="emoji-picker-grid" id="emojiPickerGrid"></div>
+        <button type="button" class="secondary" id="emojiPickerCancelBtn" style="margin-top:10px;">Cancelar</button>
+      </div>
       <div id="categoryManageStatusArea"></div>
     </div>`;
   const grid = panel.querySelector('#manageCatGrid');
@@ -3195,7 +3439,7 @@ function renderCategoryManagePanel(){
     chip.className = 'cat-chip';
     chip.style.borderColor = cat.color;
     chip.style.color = cat.color;
-    chip.innerHTML = `${escapeHtml(cat.name)} <button type="button" class="cat-chip-remove" data-id="${cat.id}" title="Eliminar categoría">✕</button>`;
+    chip.innerHTML = `<button type="button" class="cat-emoji-btn" data-id="${cat.id}" title="Cambiar emoji">${cat.emoji || categoryEmoji(cat.name)}</button> ${escapeHtml(cat.name)} <button type="button" class="cat-chip-remove" data-id="${cat.id}" title="Eliminar categoría">✕</button>`;
     grid.appendChild(chip);
   });
   grid.querySelectorAll('.cat-chip-remove').forEach(btn=>{
@@ -3214,13 +3458,53 @@ function renderCategoryManagePanel(){
       renderRecipesGrid();
     });
   });
+
+  // Selector de emoji: se muestra dentro del mismo panel, sin ventanas
+  // flotantes, para que funcione bien también en pantallas de celular.
+  let pendingEmojiCatId = null;
+  const emojiSection = panel.querySelector('#emojiPickerSection');
+  function renderEmojiPickerGrid(filter){
+    const gridEl = panel.querySelector('#emojiPickerGrid');
+    gridEl.innerHTML = '';
+    const nf = normText(filter);
+    const list = nf ? EMOJI_DATABASE.filter(entry=>entry.keywords.some(k=>normText(k).includes(nf))) : EMOJI_DATABASE;
+    (list.length ? list : EMOJI_DATABASE).slice(0, 90).forEach(entry=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'emoji-picker-item';
+      b.textContent = entry.emoji;
+      b.addEventListener('click', async ()=>{
+        const cat = categories.find(c=>c.id === pendingEmojiCatId);
+        if(cat){ cat.emoji = entry.emoji; await saveCategories(); }
+        renderCategoryManagePanel();
+        renderCategoryFilterBar();
+        renderRecipesGrid();
+      });
+      gridEl.appendChild(b);
+    });
+  }
+  grid.querySelectorAll('.cat-emoji-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      pendingEmojiCatId = btn.dataset.id;
+      const cat = categories.find(c=>c.id === pendingEmojiCatId);
+      emojiSection.hidden = false;
+      panel.querySelector('#emojiPickerCatName').textContent = cat ? cat.name : '';
+      panel.querySelector('#emojiPickerSearch').value = '';
+      renderEmojiPickerGrid('');
+      emojiSection.scrollIntoView({behavior:'smooth', block:'nearest'});
+    });
+  });
+  panel.querySelector('#emojiPickerSearch').addEventListener('input', (e)=>renderEmojiPickerGrid(e.target.value));
+  panel.querySelector('#emojiPickerCancelBtn').addEventListener('click', ()=>{ emojiSection.hidden = true; pendingEmojiCatId = null; });
+
   const addBtn = panel.querySelector('#addCategoryBtn');
   const doAdd = async ()=>{
     const input = panel.querySelector('#newCategoryInput');
     const name = input.value.trim();
     if(!name) return;
     const id = 'cat_' + slugify(name) + '_' + Date.now().toString(36);
-    categories.push({ id, name, color: CATEGORY_PALETTE[categories.length % CATEGORY_PALETTE.length] });
+    categories.push({ id, name, color: CATEGORY_PALETTE[categories.length % CATEGORY_PALETTE.length], emoji: inferEmojiForName(name) });
     await saveCategories();
     input.value = '';
     renderCategoryManagePanel();
@@ -3230,6 +3514,10 @@ function renderCategoryManagePanel(){
   panel.querySelector('#newCategoryInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); doAdd(); } });
   panel.querySelector('#undoDeleteCategoryBtn').addEventListener('click', undoDeleteCategory);
   panel.querySelector('#resetCategoriesBtn').addEventListener('click', resetCategoriesToDefault);
+  panel.querySelector('#restoreByDateBtn').addEventListener('click', ()=>{
+    const val = panel.querySelector('#restoreDateInput').value;
+    restoreCategoriesToDate(val);
+  });
 }
 
 /* Restaura la última categoría eliminada durante esta sesión, en la posición
@@ -3310,7 +3598,9 @@ async function fetchPageCookingText(url){
   const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
   const matches = (bodyText.match(RECIPE_KEYWORDS_RE) || []).length;
   if(matches < 3){
-    throw new Error('Esa página no parece contener una receta de cocina, así que se ignoró. Si crees que sí la tiene, intenta con el enlace directo al artículo de la receta.');
+    const err = new Error('No se detectó ninguna receta en esa página. Prueba pegando el enlace directo al artículo de la receta 🙂');
+    err.noRecipeDetected = true;
+    throw err;
   }
   return bodyText.slice(0, 12000);
 }
@@ -3318,6 +3608,13 @@ async function extractRecipeFromWebPage(url, pageText){
   const instruction = `El usuario pegó el enlace a esta página web (${url}). A continuación está el texto visible de esa página. Extrae fielmente la receta que contiene, sin inventar datos que no aparezcan: título, ingredientes con cantidades, utensilios, pasos numerados y bien explicados, tiempos estimados y consejos. IMPORTANTE: sin importar el idioma original del texto, TODO tu texto de respuesta debe estar completamente en ${settings.language} — traduce lo que haga falta.\n\nTexto de la página:\n${pageText}`;
   const parts = [{ text: instruction }];
   const recipe = await runRecipeExtraction(parts);
+  const hasIngredients = recipe.ingredients && recipe.ingredients.length;
+  const hasSteps = recipe.steps && recipe.steps.length;
+  if(!recipe.title || (!hasIngredients && !hasSteps)){
+    const err = new Error('No se detectó ninguna receta en esa página. Prueba pegando el enlace directo al artículo de la receta 🙂');
+    err.noRecipeDetected = true;
+    throw err;
+  }
   recipe.sourceUrl = url;
   recipe.sourceType = 'web';
   return recipe;
@@ -3343,7 +3640,11 @@ async function doExtractFromUrl(){
     clearStatus('urlStatusArea');
     renderRecipeCard(recipe, document.getElementById('urlRecipeResult'), {editable:true, saved:false});
   }catch(err){
-    setStatus('urlStatusArea','error', err.message);
+    if(err.noRecipeDetected){
+      setStatus('urlStatusArea','info', err.message);
+    } else {
+      setStatus('urlStatusArea','error', err.message);
+    }
   }finally{
     document.getElementById('extractUrlBtn').disabled = false;
   }
@@ -3453,7 +3754,7 @@ async function renderRecipesGrid(){
     section.className = 'accordion-item recipe-group' + (isOpen ? ' open' : '');
     section.innerHTML = `
       <button type="button" class="accordion-header">
-        <span class="acc-icon">${cat ? '🏷' : '📂'}</span>
+        <span class="acc-icon">${cat ? (cat.emoji || categoryEmoji(cat.name)) : '📂'}</span>
         <span class="acc-title"${cat ? ` style="color:${cat.color};"` : ''}>${cat ? escapeHtml(cat.name) : 'Sin categoría'}</span>
         <span class="acc-chevron">▾</span>
       </button>
