@@ -1873,6 +1873,7 @@ let selectedGoal = 'bajar de peso';
 let selectedDuration = 'auto';
 let selectedDietType = '';
 let lastGeneratedPlan = null;
+let lastGeneratedShoppingList = null;
 const MEDICAL_GOAL_KEYWORDS = ['etapa especial', 'control médico'];
 
 function setupChipGroup(groupId, onSelect){
@@ -2166,12 +2167,16 @@ async function generateShoppingList(){
   }
 }
 
-function renderShoppingList(list){
+/* checkedIdx (opcional): arreglo de índices planos de los checkboxes que ya
+   estaban marcados, usado para restaurar el progreso guardado previamente. */
+function renderShoppingList(list, checkedIdx){
   const existing = document.getElementById('shoppingListBox');
   if(existing) existing.remove();
+  lastGeneratedShoppingList = list;
   const box = document.createElement('div');
   box.id = 'shoppingListBox';
   box.className = 'plan-summary';
+  let idx = 0;
   box.innerHTML = `
     <h2 style="font-size:18px;">🛒 Lista de compras</h2>
     <div class="shopping-list">
@@ -2179,11 +2184,13 @@ function renderShoppingList(list){
         <div class="shopping-aisle">
           <h4>${escapeHtml(aisle.aisle_name||'')}</h4>
           ${(aisle.items||[]).map(it=>`
-            <label><input type="checkbox" class="shop-check"> ${escapeHtml(it.item)}${it.approx_amount ? ` — <span class="mono">${escapeHtml(it.approx_amount)}</span>`:''}</label>
+            <label><input type="checkbox" class="shop-check" data-idx="${idx++}"> ${escapeHtml(it.item)}${it.approx_amount ? ` — <span class="mono">${escapeHtml(it.approx_amount)}</span>`:''}</label>
           `).join('')}
         </div>`).join('')}
     </div>
+    <div id="shoppingListStatusArea"></div>
     <div class="card-actions">
+      <button type="button" class="secondary" id="saveShoppingListBtn">💾 Guardar progreso</button>
       <button type="button" class="secondary" id="copyShoppingListBtn">📋 Copiar lista</button>
     </div>
   `;
@@ -2191,6 +2198,15 @@ function renderShoppingList(list){
   box.querySelectorAll('.shop-check').forEach(cb=>{
     cb.addEventListener('change', e=> e.target.closest('label').classList.toggle('done', e.target.checked));
   });
+  if(checkedIdx && checkedIdx.length){
+    box.querySelectorAll('.shop-check').forEach(cb=>{
+      if(checkedIdx.includes(Number(cb.dataset.idx))){
+        cb.checked = true;
+        cb.closest('label').classList.add('done');
+      }
+    });
+  }
+  document.getElementById('saveShoppingListBtn').addEventListener('click', saveShoppingListProgress);
   document.getElementById('copyShoppingListBtn').addEventListener('click', async ()=>{
     let text = 'Lista de compras\n\n';
     (list.aisles||[]).forEach(aisle=>{
@@ -2201,6 +2217,48 @@ function renderShoppingList(list){
     try{ await navigator.clipboard.writeText(text); alert('Lista copiada al portapapeles.'); }
     catch(e){ downloadFile('lista-de-compras.txt', text, 'text/plain'); }
   });
+}
+
+/* Guarda la lista de compras generada junto con qué casillas están marcadas,
+   vinculado a la cuenta del usuario. storeSet ya se encarga de sincronizar
+   con Firestore cuando hay sesión iniciada, igual que el plan semanal. */
+async function saveShoppingListProgress(){
+  const box = document.getElementById('shoppingListBox');
+  if(!box || !lastGeneratedShoppingList) return;
+  const btn = document.getElementById('saveShoppingListBtn');
+  btn.disabled = true;
+  setStatus('shoppingListStatusArea','loading','Guardando tu progreso...');
+  try{
+    const checked = Array.from(box.querySelectorAll('.shop-check'))
+      .filter(cb=>cb.checked)
+      .map(cb=>Number(cb.dataset.idx));
+    const state = { list: lastGeneratedShoppingList, checked };
+    const result = await storeSet('shoppinglist', JSON.stringify(state));
+    if(result.cloud){
+      setStatus('shoppingListStatusArea','ok','Progreso guardado y sincronizado con tu cuenta. Se cargará automáticamente la próxima vez que entres.');
+    } else if(result.local){
+      setStatus('shoppingListStatusArea','info','Progreso guardado en este dispositivo (no se pudo sincronizar con la nube).');
+    } else {
+      setStatus('shoppingListStatusArea','error','No se pudo guardar el progreso en ningún lado.');
+    }
+  }catch(err){
+    setStatus('shoppingListStatusArea','error','No se pudo guardar el progreso: ' + err.message);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* Carga la lista de compras guardada (si existe) al iniciar la app, junto
+   con las casillas que ya estaban marcadas. */
+async function loadShoppingListState(){
+  const raw = await storeGet('shoppinglist');
+  if(!raw) return;
+  try{
+    const state = JSON.parse(raw);
+    if(state.list) renderShoppingList(state.list, state.checked||[]);
+  }catch(e){
+    console.warn('No se pudo restaurar la lista de compras guardada:', e);
+  }
 }
 
 /* ---- Seguimiento semanal ---- */
@@ -3185,6 +3243,7 @@ if(!fbBlocked){
       renderCategoryFilterBar();
       renderRecipesGrid();
       await loadMealPlanState();
+      await loadShoppingListState();
     } else {
       try{ localStorage.removeItem('sazonLensHasLoggedIn'); }catch(e){}
       document.getElementById('appShell').hidden = true;
@@ -3207,6 +3266,7 @@ if(!fbBlocked){
   renderCategoryFilterBar();
   renderRecipesGrid();
   await loadMealPlanState();
+  await loadShoppingListState();
 }
 
 /* ============================= INIT ============================= */
