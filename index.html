@@ -555,6 +555,10 @@
   .field .row{ display:flex; gap:8px; flex-wrap:wrap; }
   .field .row input, .field .row select{ flex:1; min-width:0; }
   .key-row{ position:relative; }
+  /* Enmascara el texto visualmente sin usar type="password", para que Chrome
+     y otros gestores de contraseñas no la reconozcan como una credencial de
+     inicio de sesión y no ofrezcan guardarla cada vez. */
+  .masked-field{ -webkit-text-security:disc; text-security:disc; }
   a{ color:var(--accent-dark); }
   hr.sep{ border:none; border-top:1px solid var(--line); margin:2px 0; }
   .badge-free{ background:var(--herb); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
@@ -627,8 +631,8 @@
   <div class="tabs-carousel">
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
     <nav class="tabs" id="tabsTrack">
-      <button class="tab-btn" data-tab="urlExtract">Desde Página Web</button>
-      <button class="tab-btn active" data-tab="extract">Desde YouTube</button>
+      <button class="tab-btn active" data-tab="urlExtract">Desde Página Web</button>
+      <button class="tab-btn" data-tab="extract">Desde YouTube</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
       <button class="tab-btn" data-tab="quickLog">Registro Rápido</button>
@@ -643,7 +647,7 @@
 <main>
 
   <!-- EXTRACT TAB (YouTube only, vía Gemini) -->
-  <section id="tab-extract" class="tab-panel active">
+  <section id="tab-extract" class="tab-panel">
     <div class="intro">
       <p>Pega el enlace de un video de <strong>YouTube</strong> de cocina y Gemini AI lo verá directamente para transformarlo en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato.</p>
     </div>
@@ -705,7 +709,7 @@
   </section>
 
   <!-- URL EXTRACT TAB -->
-  <section id="tab-urlExtract" class="tab-panel">
+  <section id="tab-urlExtract" class="tab-panel active">
     <div class="intro">
       <p>Pega el enlace de una <strong>página web</strong> que tenga una receta (blog de cocina, sitio de recetas, etc.) y la IA la leerá y la transformará en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato. Si la página no habla de cocina, se ignora automáticamente.</p>
     </div>
@@ -828,7 +832,7 @@
       <div class="field">
         <label>Clave de API de Gemini <span class="badge-free">gratis en Google AI Studio</span></label>
         <div class="key-row row">
-          <input type="password" id="apiKey" placeholder="AIza...">
+          <input type="text" id="apiKey" class="masked-field" placeholder="AIza..." name="sazon-gemini-key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
           <button type="button" class="secondary" id="toggleKeyBtn">Mostrar</button>
         </div>
         <span class="hint">Consíguela gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. El plan gratuito incluye cuota diaria sin costo.</span>
@@ -1129,8 +1133,48 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     if(btn.dataset.tab === 'settings') maybeAutoLoadModels();
     btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
     updateTabArrows();
+    saveLastTab(btn.dataset.tab);
   });
 });
+
+/* ---- Memoria de la última pestaña activa ----
+   La app siempre debe abrir en la primera pestaña ("Desde Página Web") solo
+   cuando se abre de nuevo después de un rato de inactividad o de haber
+   cerrado el navegador — igual que cualquier página normal. Si el usuario
+   solo cambió a otra app o pestaña del navegador y regresó pronto, debe
+   seguir donde estaba. Como no hay forma de distinguir "cambié de pestaña"
+   de "el sistema recargó la página" desde JavaScript, se aproxima guardando
+   la última pestaña vista junto con la hora, y solo se restaura si pasó
+   menos de TAB_MEMORY_MINUTES desde la última vez que se vio la página. */
+const LAST_TAB_KEY = 'sazonLensLastTab';
+const LAST_SEEN_KEY = 'sazonLensLastSeen';
+const TAB_MEMORY_MINUTES = 30;
+function saveLastTab(tabName){
+  try{ localStorage.setItem(LAST_TAB_KEY, tabName); localStorage.setItem(LAST_SEEN_KEY, String(Date.now())); }catch(e){}
+}
+function markSeenNow(){
+  try{ localStorage.setItem(LAST_SEEN_KEY, String(Date.now())); }catch(e){}
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) markSeenNow(); });
+window.addEventListener('beforeunload', markSeenNow);
+function restoreLastTab(){
+  let targetTab = null;
+  try{
+    const lastSeenRaw = localStorage.getItem(LAST_SEEN_KEY);
+    const lastTab = localStorage.getItem(LAST_TAB_KEY);
+    if(lastSeenRaw && lastTab && document.getElementById('tab-'+lastTab)){
+      const elapsedMinutes = (Date.now() - parseInt(lastSeenRaw, 10)) / 60000;
+      if(elapsedMinutes >= 0 && elapsedMinutes < TAB_MEMORY_MINUTES) targetTab = lastTab;
+    }
+  }catch(e){}
+  if(targetTab){
+    const btn = document.querySelector('.tab-btn[data-tab="'+targetTab+'"]');
+    if(btn) btn.click();
+  } else {
+    markSeenNow();
+  }
+}
+restoreLastTab();
 
 const tabsTrack = document.getElementById('tabsTrack');
 const tabPrevBtn = document.getElementById('tabPrev');
@@ -1183,8 +1227,8 @@ document.getElementById('language').addEventListener('change', async (e)=>{
 document.getElementById('toggleKeyBtn').addEventListener('click', ()=>{
   const input = document.getElementById('apiKey');
   const btn = document.getElementById('toggleKeyBtn');
-  if(input.type === 'password'){ input.type='text'; btn.textContent='Ocultar'; }
-  else{ input.type='password'; btn.textContent='Mostrar'; }
+  if(input.classList.contains('masked-field')){ input.classList.remove('masked-field'); btn.textContent='Ocultar'; }
+  else{ input.classList.add('masked-field'); btn.textContent='Mostrar'; }
 });
 
 document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
@@ -2511,7 +2555,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
       <div class="accordion">${accordionSections}</div>
 
       <div class="card-actions">
-        ${noAI ? '' : `<button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>`}
+        ${(!recipe.image && !noAI) ? `<button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>` : ''}
         <button type="button" class="secondary act-save">💾 ${saved ? 'Actualizar receta' : 'Guardar receta'}</button>
         <button type="button" class="secondary act-print">🖨 Imprimir</button>
         <button type="button" class="secondary act-pdf">⬇ Descargar PDF</button>
@@ -3142,15 +3186,32 @@ function ensureProtocol(url){
   return /^https?:\/\//i.test(url) ? url : 'https://' + url;
 }
 const RECIPE_KEYWORDS_RE = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
-async function fetchPageCookingText(url){
-  let res;
+/* La gran mayoría de blogs y sitios de recetas NO envían los encabezados CORS
+   (Access-Control-Allow-Origin) necesarios para que un sitio externo como
+   Sazón Lens pueda leer su HTML directamente desde el navegador — es una
+   restricción de seguridad del propio navegador, no algo que se pueda evitar
+   con código. Por eso, si la lectura directa falla, se reintenta a través de
+   un proxy CORS público (allorigins.win) que sí devuelve el contenido con
+   los encabezados correctos. Este proxy es un servicio de terceros gratuito:
+   si algún día deja de funcionar o está caído, la lectura de esa página en
+   particular fallará y habrá que buscar un proxy alternativo. */
+async function fetchRawHtml(url){
   try{
-    res = await fetch(url, { mode:'cors' });
-  }catch(networkErr){
-    throw new Error('No se pudo leer esa página desde aquí: el sitio bloquea la lectura de su contenido por seguridad propia (CORS), o falló la conexión. Prueba con otra página.');
+    const res = await fetch(url, { mode:'cors' });
+    if(res.ok) return await res.text();
+  }catch(directErr){ /* bloqueado por CORS o sin red — se intenta el proxy abajo */ }
+  try{
+    const proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res = await fetch(proxied);
+    if(res.ok) return await res.text();
+  }catch(proxyErr){ /* el proxy de respaldo tampoco respondió */ }
+  return null;
+}
+async function fetchPageCookingText(url){
+  const html = await fetchRawHtml(url);
+  if(html === null){
+    throw new Error('No se pudo leer esa página (ni directamente ni a través del proxy de respaldo). Puede que el sitio esté caído, bloqueando el acceso, o que el proxy esté temporalmente fuera de servicio. Prueba con otra página o intenta de nuevo en un momento.');
   }
-  if(!res.ok) throw new Error(`La página respondió con un error (HTTP ${res.status}). Verifica que el enlace sea correcto.`);
-  const html = await res.text();
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
   const matches = (bodyText.match(RECIPE_KEYWORDS_RE) || []).length;
