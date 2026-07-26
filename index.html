@@ -327,6 +327,13 @@
   }
   .url-form input[type=text]{ flex:1; min-width:160px; }
   .icon-btn{ padding:11px 16px; flex:0 0 auto; font-size:22px; }
+  /* Estructura fija de 2 filas (campo grande arriba, botones abajo) para que
+     "Desde página web" y "Desde YouTube" se vean siempre idénticos: primero
+     Extraer receta, luego Limpiar y luego Pegar. */
+  .url-form.stacked{ flex-direction:column; align-items:stretch; }
+  .url-form.stacked input[type=text]{ width:100%; }
+  .url-button-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .url-button-row.primary > button:first-child{ flex:1; min-width:140px; }
   input[type=text], input[type=password], input[type=number], select, textarea{
     font-family:'Inter',sans-serif; font-size:14.5px;
     border:1px solid var(--line); border-radius:var(--radius-sm); padding:11px 13px;
@@ -682,11 +689,13 @@
     <div class="intro">
       <p>Pega el enlace de un video de <strong>YouTube</strong> de cocina y Gemini AI lo verá directamente para transformarlo en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato.</p>
     </div>
-    <div class="url-form">
+    <div class="url-form stacked">
       <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
-      <button type="button" class="secondary icon-btn" id="clearVideoUrlBtn" title="Limpiar">🗑️</button>
-      <button type="button" class="secondary icon-btn" id="pasteVideoUrlBtn" title="Pegar desde el portapapeles">📋</button>
-      <button id="extractBtn">Extraer receta</button>
+      <div class="url-button-row primary">
+        <button id="extractBtn">Extraer receta</button>
+        <button type="button" class="secondary icon-btn" id="clearVideoUrlBtn" title="Limpiar">🗑️</button>
+        <button type="button" class="secondary icon-btn" id="pasteVideoUrlBtn" title="Pegar desde el portapapeles">📋</button>
+      </div>
     </div>
     <div class="platform-hint" id="platformHint"></div>
 
@@ -734,6 +743,10 @@
     </div>
     <div class="chat-box-form">
       <textarea id="textPrompt" class="chat-textarea" placeholder="Describe la receta que quieres, con todo el detalle que quieras...&#10;Ej: receta de pasta alfredo casera, cremosa, para 2 personas"></textarea>
+      <div class="url-button-row" style="justify-content:flex-end;">
+        <button type="button" class="secondary icon-btn" id="clearTextPromptBtn" title="Limpiar">🗑️</button>
+        <button type="button" class="secondary icon-btn" id="pasteTextPromptBtn" title="Pegar desde el portapapeles">📋</button>
+      </div>
       <button id="generateTextBtn">Generar receta</button>
     </div>
     <div class="platform-hint">Tip: presiona Ctrl + Enter (o Cmd + Enter en Mac) para generar rápido.</div>
@@ -746,11 +759,13 @@
     <div class="intro">
       <p>Pega el enlace de una <strong>página web</strong> que tenga una receta (blog de cocina, sitio de recetas, etc.) y la IA la leerá y la transformará en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato. Si la página no habla de cocina, se ignora automáticamente.</p>
     </div>
-    <div class="url-form">
+    <div class="url-form stacked">
       <input type="text" id="pageUrl" placeholder="https://ejemplo.com/receta-de-tacos">
-      <button type="button" class="secondary icon-btn" id="clearPageUrlBtn" title="Limpiar">🗑️</button>
-      <button type="button" class="secondary icon-btn" id="pastePageUrlBtn" title="Pegar desde el portapapeles">📋</button>
-      <button id="extractUrlBtn">Extraer receta</button>
+      <div class="url-button-row primary">
+        <button id="extractUrlBtn">Extraer receta</button>
+        <button type="button" class="secondary icon-btn" id="clearPageUrlBtn" title="Limpiar">🗑️</button>
+        <button type="button" class="secondary icon-btn" id="pastePageUrlBtn" title="Pegar desde el portapapeles">📋</button>
+      </div>
     </div>
     <div id="urlStatusArea"></div>
     <div id="urlRecipeResult"></div>
@@ -1875,6 +1890,15 @@ document.getElementById('extractImageBtn').addEventListener('click', async ()=>{
 /* ============================= TEXT TAB ============================= */
 document.getElementById('generateTextBtn').addEventListener('click', doGenerateFromText);
 document.getElementById('textPrompt').addEventListener('keydown', (e)=>{ if((e.ctrlKey || e.metaKey) && e.key==='Enter') doGenerateFromText(); });
+document.getElementById('clearTextPromptBtn').addEventListener('click', ()=>{
+  const el = document.getElementById('textPrompt');
+  el.value = '';
+  el.focus();
+  clearStatus('textStatusArea');
+});
+document.getElementById('pasteTextPromptBtn').addEventListener('click', ()=>{
+  pasteIntoField('textPrompt','textStatusArea');
+});
 
 async function doGenerateFromText(){
   const prompt = document.getElementById('textPrompt').value.trim();
@@ -3417,7 +3441,12 @@ async function renderCategoryFilterBar(){
   allBtn.className = 'cat-chip' + (activeCategoryFilter===null ? ' selected' : '');
   allBtn.textContent = 'Todas';
   if(activeCategoryFilter===null) allBtn.style.background = 'var(--ink)';
-  allBtn.addEventListener('click', ()=>{ activeCategoryFilter = null; renderCategoryFilterBar(); renderRecipesGrid(); });
+  allBtn.addEventListener('click', ()=>{
+    activeCategoryFilter = null;
+    document.getElementById('categoryFilterPanel')?.classList.remove('open');
+    renderCategoryFilterBar();
+    renderRecipesGrid();
+  });
   bar.appendChild(allBtn);
 
   categories.forEach(cat=>{
