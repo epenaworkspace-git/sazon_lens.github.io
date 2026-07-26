@@ -33,6 +33,11 @@
   }
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+    /* El FAB de chat es decorativo/lúdico y se mantiene animado aunque el
+       sistema tenga activado "reducir movimiento", por eso se excluye aquí
+       con selectores más específicos que la regla universal de arriba. */
+    #chatFab{ animation-duration:2.8s !important; animation-iteration-count:infinite !important; }
+    #chatFab::after{ animation-duration:3.6s !important; animation-iteration-count:infinite !important; }
   }
   *{box-sizing:border-box;}
   [hidden]{ display:none !important; }
@@ -93,11 +98,7 @@
   .brand .tagline{
     font-size:12.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
   }
-  .header-lang{
-    margin-left:auto; background:#332c24; color:var(--paper); border:1px solid #4a4032;
-    border-radius:8px; padding:5px 8px; font-size:13px; font-family:'Inter',sans-serif;
-  }
-  .user-email{ font-size:12px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .user-email{ margin-left:auto; font-size:12px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .logout-btn{
     background:#463c30; color:var(--paper); border:1px solid #574b3c; border-radius:8px;
     padding:5px 12px; font-size:12.5px; transition:background .15s var(--ease);
@@ -271,15 +272,6 @@
     .brand .mark{ font-size:20px; flex:1 1 100%; }
     .brand .tagline{ display:none; }
     .user-email{ display:none; }
-    .header-lang{
-      margin-left:0;
-      flex:1 1 auto;
-      order:3;
-    }
-    .logout-btn{
-      flex:0 0 auto;
-      order:4;
-    }
     .tabs-carousel{ gap:4px; }
     .tab-arrow{ width:26px; height:26px; font-size:15px; flex:0 0 auto; }
     .tab-btn{ padding:9px 16px 11px 16px; font-size:13px; }
@@ -291,20 +283,6 @@
   }
   nav.tabs::-webkit-scrollbar{ display:none; }
   .tabs-carousel{ display:flex; align-items:flex-end; gap:6px; }
-  .global-search-row{
-    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-    margin:12px 0 14px 0; padding-top:12px; border-top:1px solid rgba(255,255,255,.08);
-  }
-  .global-search-row input[type=text]{
-    flex:1; min-width:200px; background:#fffdf8;
-  }
-  #globalSearchEngine{
-    background:#332c24; color:var(--paper); border:1px solid #4a4032; flex:0 0 auto;
-  }
-  #globalSearchBtn{ flex:0 0 auto; white-space:nowrap; }
-  .global-search-hint{
-    flex-basis:100%; font-size:11.5px; color:#c9c0ae; font-family:'IBM Plex Mono',monospace;
-  }
   .tab-arrow{
     flex:0 0 auto; background:#332c24; color:#d8cfbe; border:none;
     width:30px; height:30px; border-radius:50%; font-size:17px; line-height:1;
@@ -581,26 +559,6 @@
   hr.sep{ border:none; border-top:1px solid var(--line); margin:2px 0; }
   .badge-free{ background:var(--herb); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
 
-  /* ---------- Navegador integrado ---------- */
-  .iab-overlay{ position:fixed; inset:0; z-index:1000; background:var(--paper); display:flex; flex-direction:column; }
-  .iab-topbar{ display:flex; gap:8px; align-items:center; padding:10px 12px; background:var(--paper-card); border-bottom:1px solid var(--line); }
-  .iab-url{ flex:1; min-width:0; }
-  .iab-body{ position:relative; flex:1; min-height:0; }
-  .iab-frame-wrap, .iab-result-wrap{ position:absolute; inset:0; overflow:auto; min-width:0; }
-  #iabFrame{ width:100%; height:100%; border:none; display:block; background:#fff; }
-  .iab-extract-fab{ position:absolute; bottom:18px; right:18px; z-index:5; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.28); }
-  .iab-blocked-notice{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:16px; padding:32px; text-align:center; background:var(--paper);
-  }
-  .iab-blocked-notice p{ max-width:46ch; color:var(--ink-soft); line-height:1.5; }
-  .iab-result-wrap{ padding:16px; }
-  .iab-result-header{ margin-bottom:12px; }
-  @media (max-width:640px){
-    .iab-topbar{ padding:8px; gap:6px; }
-    .iab-topbar button{ padding:11px 14px; }
-  }
-
   footer{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:30px 0 10px 0; }
 
   @media print{
@@ -664,20 +622,12 @@
   <div class="brand">
     <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
     <span class="tagline">recetas desde video, foto o texto · con Gemini AI</span>
-    <select id="headerLanguage" class="header-lang">
-      <option value="español">🇪🇸 Español</option>
-      <option value="english">🇬🇧 English</option>
-      <option value="alemán">🇩🇪 Deutsch</option>
-      <option value="português">🇵🇹 Português</option>
-      <option value="français">🇫🇷 Français</option>
-      <option value="italiano">🇮🇹 Italiano</option>
-    </select>
     <span id="userEmailLabel" class="user-email"></span>
-    <button type="button" id="logoutBtn" class="logout-btn">Salir</button>
   </div>
   <div class="tabs-carousel">
     <button class="tab-arrow" id="tabPrev" type="button" aria-label="Pestaña anterior">‹</button>
     <nav class="tabs" id="tabsTrack">
+      <button class="tab-btn" data-tab="urlExtract">Desde Página Web</button>
       <button class="tab-btn active" data-tab="extract">Desde YouTube</button>
       <button class="tab-btn" data-tab="imageExtract">Desde Imagen</button>
       <button class="tab-btn" data-tab="textGenerate">Desde Texto</button>
@@ -688,43 +638,7 @@
     </nav>
     <button class="tab-arrow" id="tabNext" type="button" aria-label="Siguiente pestaña">›</button>
   </div>
-  <div class="global-search-row">
-    <input type="text" id="globalSearchInput" placeholder="Busca una receta o pega el enlace de una página/video de cocina...">
-    <select id="globalSearchEngine" title="Buscador">
-      <option value="google">Google</option>
-      <option value="bing">Bing</option>
-      <option value="duckduckgo">DuckDuckGo</option>
-      <option value="youtube">YouTube</option>
-    </select>
-    <button type="button" id="globalSearchBtn">🔍 Buscar</button>
-    <span class="global-search-hint">Se abre dentro de la misma app, sin salir de Sazón Lens.</span>
-  </div>
 </header>
-
-<div id="inAppBrowser" class="iab-overlay" hidden>
-  <div class="iab-topbar">
-    <input type="text" id="iabUrlInput" class="iab-url" placeholder="Escribe una URL o busca una receta...">
-    <button type="button" id="iabGoBtn">Ir</button>
-    <button type="button" id="iabCloseBtn" class="tab-arrow" aria-label="Cerrar navegador">✕</button>
-  </div>
-  <div class="iab-body">
-    <div id="iabFrameWrap" class="iab-frame-wrap">
-      <iframe id="iabFrame" title="Navegador de recetas"></iframe>
-      <button type="button" id="iabExtractFab" class="iab-extract-fab" hidden>📖 Extraer receta</button>
-      <div id="iabBlockedNotice" class="iab-blocked-notice" hidden>
-        <p>🔒 Este sitio no permite mostrarse dentro de otra app — es una restricción de seguridad que pone el propio sitio (así funciona con Google, Bing, YouTube y varios más), no algo que Sazón Lens pueda evitar.</p>
-        <button type="button" id="iabOpenExternalBtn" class="secondary">Abrir en una pestaña nueva</button>
-      </div>
-    </div>
-    <div id="iabResultWrap" class="iab-result-wrap" hidden>
-      <div class="iab-result-header">
-        <button type="button" id="iabBackBtn" class="secondary">‹ Volver al navegador</button>
-      </div>
-      <div id="iabStatusArea"></div>
-      <div id="iabRecipeResult"></div>
-    </div>
-  </div>
-</div>
 
 <main>
 
@@ -788,6 +702,19 @@
     <div class="platform-hint">Tip: presiona Ctrl + Enter (o Cmd + Enter en Mac) para generar rápido.</div>
     <div id="textStatusArea"></div>
     <div id="textRecipeResult"></div>
+  </section>
+
+  <!-- URL EXTRACT TAB -->
+  <section id="tab-urlExtract" class="tab-panel">
+    <div class="intro">
+      <p>Pega el enlace de una <strong>página web</strong> que tenga una receta (blog de cocina, sitio de recetas, etc.) y la IA la leerá y la transformará en una receta clara: ingredientes, pasos, tiempos y una fotografía del plato. Si la página no habla de cocina, se ignora automáticamente.</p>
+    </div>
+    <div class="url-form">
+      <input type="text" id="pageUrl" placeholder="https://ejemplo.com/receta-de-tacos">
+      <button id="extractUrlBtn">Extraer receta</button>
+    </div>
+    <div id="urlStatusArea"></div>
+    <div id="urlRecipeResult"></div>
   </section>
 
   <!-- QUICK LOG TAB -->
@@ -942,6 +869,13 @@
           <option value="français">Français</option>
           <option value="italiano">Italiano</option>
         </select>
+      </div>
+
+      <hr class="sep">
+
+      <div class="field">
+        <label>Cuenta<span id="settingsUserEmail" class="user-email" style="margin-left:8px;"></span></label>
+        <button type="button" id="logoutBtn" class="logout-btn">Salir</button>
       </div>
 
       <div class="row" style="margin-top:6px;">
@@ -1226,7 +1160,6 @@ async function loadSettings(){
   document.getElementById('textModel').value = settings.textModel || 'gemini-2.5-flash';
   document.getElementById('imageModel').value = settings.imageModel || 'gemini-2.5-flash-image';
   document.getElementById('language').value = settings.language || 'español';
-  document.getElementById('headerLanguage').value = settings.language || 'español';
 
   // Si ya hay una clave guardada, consulta en segundo plano la lista de modelos
   // reales disponibles para esa clave, para que el selector esté actualizado
@@ -1242,9 +1175,8 @@ function maybeAutoLoadModels(){
   refreshModelLists(key, {silent:true});
 }
 
-document.getElementById('headerLanguage').addEventListener('change', async (e)=>{
+document.getElementById('language').addEventListener('change', async (e)=>{
   settings.language = e.target.value;
-  document.getElementById('language').value = settings.language;
   await storeSet('settings', JSON.stringify(settings));
 });
 
@@ -1260,7 +1192,6 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
   settings.textModel = document.getElementById('textModel').value.trim() || 'gemini-2.5-flash';
   settings.imageModel = document.getElementById('imageModel').value.trim() || 'gemini-2.5-flash-image';
   settings.language = document.getElementById('language').value;
-  document.getElementById('headerLanguage').value = settings.language;
   const saveResult = await storeSet('settings', JSON.stringify(settings));
   const syncNote = saveResult.cloud
     ? ''
@@ -3192,16 +3123,15 @@ async function resetCategoriesToDefault(){
   setStatus('categoryManageStatusArea','ok','Se restauraron las categorías predeterminadas.');
 }
 
-/* ============================= BÚSQUEDA GENERAL / NAVEGADOR INTEGRADO ============================= */
-/* Barra siempre visible (dentro del header) para buscar una receta o pegar un
-   enlace directo. Todo ocurre DENTRO de Sazón Lens: se abre un navegador
-   integrado (iframe a pantalla completa), nunca una pestaña nueva. Mientras
-   se navega, se intenta leer el texto de la página en segundo plano; si
-   contiene suficientes palabras clave de cocina, aparece el botón flotante
-   "Extraer receta" (si no, simplemente no aparece — igual que en apps como
-   CookBooker). Algunos sitios bloquean esa lectura por seguridad del propio
-   navegador (CORS): en esos casos el botón no aparece, aunque la página sí
-   se pueda ver dentro del navegador integrado. */
+/* ============================= EXTRACCIÓN DESDE PÁGINA WEB ============================= */
+/* Pestaña "Desde Página Web": el usuario pega la URL de una página con una
+   receta y la app la lee directamente (fetch), sin usar iframe ni pestañas
+   nuevas. Antes de llamar a la IA se aplica un filtro de palabras clave de
+   cocina: si la página no contiene suficientes indicios de que habla de
+   comida/recetas, se ignora y no se gasta ninguna llamada a la IA. Algunos
+   sitios bloquean la lectura de su contenido desde el navegador por
+   seguridad propia (CORS) — en ese caso no hay forma de leer la página desde
+   aquí y se le informa claramente al usuario, sin inventar nada. */
 function looksLikeUrl(text){
   const t = text.trim();
   if(/^https?:\/\//i.test(t)) return true;
@@ -3211,149 +3141,57 @@ function looksLikeUrl(text){
 function ensureProtocol(url){
   return /^https?:\/\//i.test(url) ? url : 'https://' + url;
 }
-function buildSearchUrl(raw){
-  const engine = document.getElementById('globalSearchEngine').value;
-  const query = /receta|recipe/i.test(raw) ? raw : raw + ' receta';
-  if(engine === 'bing') return 'https://www.bing.com/search?q=' + encodeURIComponent(query);
-  if(engine === 'duckduckgo') return 'https://duckduckgo.com/?q=' + encodeURIComponent(query);
-  if(engine === 'youtube') return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
-  return 'https://www.google.com/search?q=' + encodeURIComponent(query);
-}
-function runGlobalSearch(){
-  const input = document.getElementById('globalSearchInput');
-  const raw = input.value.trim();
-  if(!raw) return;
-  openInAppBrowser(looksLikeUrl(raw) ? ensureProtocol(raw) : buildSearchUrl(raw));
-}
-document.getElementById('globalSearchBtn').addEventListener('click', runGlobalSearch);
-document.getElementById('globalSearchInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); runGlobalSearch(); } });
-try{
-  const savedEngine = localStorage.getItem('sazonLensSearchEngine');
-  if(savedEngine) document.getElementById('globalSearchEngine').value = savedEngine;
-}catch(e){}
-document.getElementById('globalSearchEngine').addEventListener('change', (e)=>{
-  try{ localStorage.setItem('sazonLensSearchEngine', e.target.value); }catch(err){}
-});
-
-/* ---- Navegador integrado (in-app browser) ---- */
-/* Google, Bing, YouTube y la mayoría de redes sociales bloquean por completo
-   que su contenido se muestre dentro de un iframe (X-Frame-Options / CSP
-   frame-ancestors) — es una protección anti-clickjacking que ponen ellos
-   mismos en su servidor, y ningún sitio externo (incluyendo Sazón Lens)
-   puede evitarla desde el navegador. Por eso, para esos dominios, en vez de
-   intentar cargarlos (y que se vea una página en blanco/rota), se muestra un
-   aviso claro con la opción de abrirlos en una pestaña nueva. El resto de
-   páginas (la gran mayoría de blogs de recetas) sí cargan normalmente. */
-const IAB_UNFRAMEABLE_DOMAINS = [
-  'google.', 'bing.com', 'duckduckgo.com', 'youtube.com', 'youtu.be',
-  'facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'tiktok.com',
-  'pinterest.', 'amazon.', 'reddit.com', 'linkedin.com'
-];
-function isLikelyUnframeable(url){
+const RECIPE_KEYWORDS_RE = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
+async function fetchPageCookingText(url){
+  let res;
   try{
-    const host = new URL(url).hostname.replace(/^www\./,'');
-    return IAB_UNFRAMEABLE_DOMAINS.some(d => host.includes(d));
-  }catch(e){ return true; }
-}
-const iabEls = {
-  overlay: document.getElementById('inAppBrowser'),
-  urlInput: document.getElementById('iabUrlInput'),
-  frame: document.getElementById('iabFrame'),
-  frameWrap: document.getElementById('iabFrameWrap'),
-  resultWrap: document.getElementById('iabResultWrap'),
-  extractBtn: document.getElementById('iabExtractFab'),
-  blockedNotice: document.getElementById('iabBlockedNotice'),
-  recipeResult: document.getElementById('iabRecipeResult')
-};
-let iabCurrentUrl = '';
-let iabExtractedText = '';
-
-function openInAppBrowser(url){
-  iabEls.overlay.hidden = false;
-  iabEls.resultWrap.hidden = true;
-  iabEls.frameWrap.hidden = false;
-  navigateInAppBrowser(url);
-}
-function closeInAppBrowser(){
-  iabEls.overlay.hidden = true;
-  iabEls.frame.src = 'about:blank';
-  iabEls.extractBtn.hidden = true;
-  iabEls.blockedNotice.hidden = true;
-  iabExtractedText = '';
-}
-async function navigateInAppBrowser(url){
-  iabCurrentUrl = url;
-  iabEls.urlInput.value = url;
-  iabEls.extractBtn.hidden = true;
-  iabExtractedText = '';
-  if(isLikelyUnframeable(url)){
-    iabEls.frame.src = 'about:blank';
-    iabEls.blockedNotice.hidden = false;
-    return;
+    res = await fetch(url, { mode:'cors' });
+  }catch(networkErr){
+    throw new Error('No se pudo leer esa página desde aquí: el sitio bloquea la lectura de su contenido por seguridad propia (CORS), o falló la conexión. Prueba con otra página.');
   }
-  iabEls.blockedNotice.hidden = true;
-  iabEls.frame.src = url;
-  try{
-    const res = await fetch(url, { mode:'cors' });
-    if(!res.ok) return;
-    const html = await res.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
-    const kw = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
-    const matches = (bodyText.match(kw) || []).length;
-    if(matches >= 3 && iabCurrentUrl === url){
-      iabExtractedText = bodyText.slice(0, 12000);
-      iabEls.extractBtn.hidden = false;
-    }
-  }catch(e){
-    /* El sitio bloqueó la lectura de su contenido (CORS) o falló la red —
-       no podemos confirmar si es una receta, así que el botón no aparece. */
+  if(!res.ok) throw new Error(`La página respondió con un error (HTTP ${res.status}). Verifica que el enlace sea correcto.`);
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
+  const matches = (bodyText.match(RECIPE_KEYWORDS_RE) || []).length;
+  if(matches < 3){
+    throw new Error('Esa página no parece contener una receta de cocina, así que se ignoró. Si crees que sí la tiene, intenta con el enlace directo al artículo de la receta.');
   }
+  return bodyText.slice(0, 12000);
 }
-document.getElementById('iabOpenExternalBtn').addEventListener('click', ()=>{
-  window.open(iabCurrentUrl, '_blank', 'noopener');
-});
-document.getElementById('iabGoBtn').addEventListener('click', ()=>{
-  const raw = iabEls.urlInput.value.trim();
-  if(!raw) return;
-  navigateInAppBrowser(looksLikeUrl(raw) ? ensureProtocol(raw) : buildSearchUrl(raw));
-});
-iabEls.urlInput.addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('iabGoBtn').click(); }
-});
-document.getElementById('iabCloseBtn').addEventListener('click', closeInAppBrowser);
-document.getElementById('iabBackBtn').addEventListener('click', ()=>{
-  iabEls.resultWrap.hidden = true;
-  iabEls.frameWrap.hidden = false;
-});
-iabEls.extractBtn.addEventListener('click', async ()=>{
-  if(!settings.apiKey){
-    iabEls.frameWrap.hidden = true;
-    iabEls.resultWrap.hidden = false;
-    setStatus('iabStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).');
-    return;
-  }
-  iabEls.frameWrap.hidden = true;
-  iabEls.resultWrap.hidden = false;
-  iabEls.recipeResult.innerHTML = '';
-  setStatus('iabStatusArea','loading','Extrayendo la receta de la página...');
-  try{
-    const recipe = await extractRecipeFromWebPage(iabCurrentUrl, iabExtractedText);
-    currentRecipe = recipe;
-    currentImageBase64 = null;
-    clearStatus('iabStatusArea');
-    renderRecipeCard(recipe, iabEls.recipeResult, {editable:true, saved:false});
-  }catch(err){
-    setStatus('iabStatusArea','error', err.message);
-  }
-});
 async function extractRecipeFromWebPage(url, pageText){
-  const instruction = `El usuario está viendo esta página web dentro del navegador integrado de la app (${url}). A continuación está el texto visible de esa página. Extrae fielmente la receta que contiene, sin inventar datos que no aparezcan: título, ingredientes con cantidades, utensilios, pasos numerados y bien explicados, tiempos estimados y consejos. IMPORTANTE: sin importar el idioma original del texto, TODO tu texto de respuesta debe estar completamente en ${settings.language} — traduce lo que haga falta.\n\nTexto de la página:\n${pageText}`;
+  const instruction = `El usuario pegó el enlace a esta página web (${url}). A continuación está el texto visible de esa página. Extrae fielmente la receta que contiene, sin inventar datos que no aparezcan: título, ingredientes con cantidades, utensilios, pasos numerados y bien explicados, tiempos estimados y consejos. IMPORTANTE: sin importar el idioma original del texto, TODO tu texto de respuesta debe estar completamente en ${settings.language} — traduce lo que haga falta.\n\nTexto de la página:\n${pageText}`;
   const parts = [{ text: instruction }];
   const recipe = await runRecipeExtraction(parts);
   recipe.sourceUrl = url;
   recipe.sourceType = 'web';
   return recipe;
+}
+document.getElementById('extractUrlBtn').addEventListener('click', doExtractFromUrl);
+document.getElementById('pageUrl').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doExtractFromUrl(); });
+async function doExtractFromUrl(){
+  const raw = document.getElementById('pageUrl').value.trim();
+  document.getElementById('urlRecipeResult').innerHTML = '';
+  if(!raw){ setStatus('urlStatusArea','error','Pega primero el enlace de una página web con una receta.'); return; }
+  if(!looksLikeUrl(raw)){ setStatus('urlStatusArea','error','Eso no parece un enlace válido.'); return; }
+  const url = ensureProtocol(raw);
+  if(!settings.apiKey){ setStatus('urlStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).'); return; }
+
+  document.getElementById('extractUrlBtn').disabled = true;
+  setStatus('urlStatusArea','loading','Leyendo la página...');
+  try{
+    const pageText = await fetchPageCookingText(url);
+    setStatus('urlStatusArea','loading','Se detectó una receta — extrayéndola...');
+    const recipe = await extractRecipeFromWebPage(url, pageText);
+    currentRecipe = recipe;
+    currentImageBase64 = null;
+    clearStatus('urlStatusArea');
+    renderRecipeCard(recipe, document.getElementById('urlRecipeResult'), {editable:true, saved:false});
+  }catch(err){
+    setStatus('urlStatusArea','error', err.message);
+  }finally{
+    document.getElementById('extractUrlBtn').disabled = false;
+  }
 }
 
 /* ============================= VIDEO DE ORIGEN ============================= */
@@ -3532,6 +3370,7 @@ if(!fbBlocked){
       document.getElementById('authGate').hidden = true;
       document.getElementById('appShell').hidden = false;
       document.getElementById('userEmailLabel').textContent = user.email || '';
+      document.getElementById('settingsUserEmail').textContent = user.email || '';
       await loadSettings();
       await loadCategories();
       renderCategoryFilterBar();
