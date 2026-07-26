@@ -461,6 +461,64 @@
   .tips-box{ background:#f4ecd7; border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 8px 8px 0; font-size:14px; }
   .card-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; padding-top:16px; border-top:1px dashed var(--line); }
 
+  /* ---------- Secciones plegables (acordeón) ---------- */
+  .accordion{ display:grid; gap:10px; margin-top:18px; }
+  .accordion-item{ border:1px solid var(--line); border-radius:14px; background:#fffdf8; overflow:hidden; }
+  .accordion-header{
+    width:100%; display:flex; align-items:center; gap:10px; padding:13px 16px;
+    background:transparent; border:none; cursor:pointer; text-align:left; box-shadow:none;
+    font-family:'Fraunces',serif; font-weight:700; font-size:15.5px; color:var(--herb-dark);
+    transition: background .15s var(--ease); border-radius:0;
+  }
+  .accordion-header:hover{ background:var(--paper-dark); transform:none; box-shadow:none; }
+  .accordion-header .acc-icon{
+    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--herb); color:var(--herb-dark);
+    display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; background:transparent;
+  }
+  .accordion-header .acc-title{ flex:1; }
+  .accordion-header .acc-chevron{ font-size:12px; color:var(--herb-dark); transition: transform .2s var(--ease); flex-shrink:0; }
+  .accordion-item.open .acc-chevron{ transform:rotate(180deg); }
+  .accordion-body{ padding:0 16px 16px 16px; display:none; }
+  .accordion-item.open .accordion-body{ display:block; animation:fade .2s var(--ease); }
+
+  /* ---------- Categorías (chips) ---------- */
+  .cat-search input{ width:100%; margin-bottom:10px; }
+  .cat-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .cat-chip{
+    border-radius:20px; padding:7px 14px; font-size:13px; font-weight:600;
+    background:#fffdf8; border:1.5px solid var(--line); color:var(--ink);
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease); box-shadow:none;
+  }
+  .cat-chip:hover{ transform:translateY(-1px); box-shadow:none; }
+  .cat-chip.selected{ color:#fff; box-shadow:var(--shadow-sm); border-color:transparent; }
+  .cat-chip.none-chip{ font-style:italic; }
+  .cat-manage-row{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .cat-manage-row input{ flex:1; min-width:160px; }
+  .cat-chip-remove{ margin-left:6px; opacity:.75; background:none; border:none; padding:0; box-shadow:none; color:inherit; font-size:12px; }
+  .cat-chip-remove:hover{ opacity:1; background:none; box-shadow:none; transform:none; }
+  .cat-filter-bar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:center; }
+
+  /* ---------- Video de origen ---------- */
+  .video-source-field{ display:grid; gap:10px; }
+  .video-source-field input[type=text]{ width:100%; }
+  .video-thumb-wrap{
+    position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line);
+    background:var(--paper-dark); cursor:pointer; max-width:420px;
+  }
+  .video-thumb-wrap img{ width:100%; display:block; aspect-ratio:16/9; object-fit:cover; }
+  .video-play-overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(36,31,26,.3); transition: background .2s var(--ease);
+  }
+  .video-thumb-wrap:hover .video-play-overlay{ background:rgba(36,31,26,.45); }
+  .video-play-overlay span{
+    width:52px; height:52px; border-radius:50%; background:rgba(255,253,248,.92); color:var(--accent-dark);
+    display:flex; align-items:center; justify-content:center; font-size:19px; box-shadow:var(--shadow-sm); padding-left:3px;
+  }
+  .video-embed-wrap{ position:relative; width:100%; max-width:420px; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#000; }
+  .video-embed-wrap iframe{ position:absolute; inset:0; width:100%; height:100%; border:none; }
+  .video-link-line{ font-size:12.5px; color:var(--ink-soft); word-break:break-all; }
+
   /* ---------- My recipes ---------- */
   .recipes-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
   .recipe-mini{
@@ -503,6 +561,10 @@
     }
     .section-title{ break-after:avoid; page-break-after:avoid; }
     .recipe-card{ box-shadow:none; border:none; }
+    .accordion-body{ display:block !important; }
+    .accordion-header .acc-chevron{ display:none !important; }
+    .accordion-header{ cursor:default; }
+    .video-embed-wrap, .video-play-overlay{ display:none !important; }
   }
 </style>
 </head>
@@ -514,6 +576,7 @@
       <span class="mark"><svg class="flame-icon" viewBox="0 0 24 32" aria-hidden="true"><g class="flame-outer"><path class="fo1" d="M12 1C12 1 3 11 3 19C3 25.6 7.8 30 12 30C16.2 30 21 25.6 21 19C21 11 12 1 12 1Z"/><path class="fo2" d="M12 6C12 6 7 13.5 7 19.5C7 23.6 9.4 26.5 12 26.5C14.6 26.5 17 23.6 17 19.5C17 13.5 12 6 12 6Z"/></g><g class="flame-inner"><path class="fi1" d="M12 14C12 14 10 17.5 10 20.3C10 22.2 10.9 23.7 12 23.7C13.1 23.7 14 22.2 14 20.3C14 17.5 12 14 12 14Z"/></g></svg>Sazón Lens</span>
     </div>
     <p class="auth-sub">Inicia sesión para guardar tus recetas en la nube y verlas desde cualquier dispositivo.</p>
+    <div id="persistenceWarning" hidden></div>
 
     <div class="auth-tabs">
       <button type="button" class="auth-tab-btn active" data-authtab="login">Iniciar sesión</button>
@@ -726,6 +789,8 @@
   <!-- MY RECIPES TAB -->
   <section id="tab-myrecipes" class="tab-panel">
     <div class="intro"><p>Tus recetas guardadas, listas para cocinar cuando quieras.</p></div>
+    <div class="cat-filter-bar" id="categoryFilterBar"></div>
+    <div id="categoryManagePanel" hidden></div>
     <div class="recipes-grid" id="recipesGrid"></div>
     <p class="empty-state" id="emptyRecipes" hidden>Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".</p>
   </section>
@@ -854,6 +919,7 @@ const firebaseConfig = (function(){
 
 let fbApp=null, auth=null, db=null, fbBlocked=false;
 let currentUser = null;
+let sessionPersistenceWarning = null;
 
 try{
   ({initializeApp} = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"));
@@ -871,9 +937,20 @@ try{
   db = getFirestore(fbApp);
 
   /* Fuerza que la sesión y los datos persistan en este navegador/dispositivo,
-     para no depender del comportamiento por defecto del entorno (WebView, app, etc.). */
-  setPersistence(auth, browserLocalPersistence).catch(()=>{ /* si falla, Firebase usa su persistencia por defecto */ });
-enableIndexedDbPersistence(db).catch(()=>{ /* si falla (ej. modo incógnito o pestañas múltiples), seguimos con localStorage como respaldo */ });
+     para no depender del comportamiento por defecto del entorno (WebView, app, etc.).
+     Se espera (await) a que esto termine ANTES de suscribirse a onAuthStateChanged más abajo,
+     para evitar una carrera en la que el estado de autenticación se resuelva usando el tipo
+     de persistencia por defecto en vez de "local". Si esto falla (por ejemplo porque el
+     navegador bloquea IndexedDB en modo incógnito, o por restricciones de almacenamiento de
+     terceros), es la causa más común de que la app pida iniciar sesión una y otra vez, así que
+     se avisa claramente en la consola en vez de tragarse el error en silencio. */
+  try{
+    await setPersistence(auth, browserLocalPersistence);
+  }catch(persistErr){
+    console.warn('[Nube] No se pudo activar la persistencia local de la sesión — es probable que esto haga que la app pida iniciar sesión de nuevo en cada visita. Motivo:', persistErr);
+    sessionPersistenceWarning = persistErr && persistErr.message;
+  }
+  enableIndexedDbPersistence(db).catch(()=>{ /* si falla (ej. modo incógnito o pestañas múltiples), seguimos con localStorage como respaldo */ });
 }catch(e){
   console.warn('[Nube] Firebase no disponible (entorno bloqueado o sin internet) — la app sigue funcionando en modo local:', e);
   fbBlocked = true;
@@ -996,7 +1073,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab === 'myrecipes') renderRecipesGrid();
+    if(btn.dataset.tab === 'myrecipes'){ renderCategoryFilterBar(); renderRecipesGrid(); }
     if(btn.dataset.tab === 'settings') maybeAutoLoadModels();
     btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
     updateTabArrows();
@@ -2118,11 +2195,88 @@ function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
 
+/* Recuerda qué secciones (acordeón) dejó abiertas/cerradas el usuario para cada
+   receta, sin guardar ese estado dentro del JSON de la receta (por eso se usa un
+   WeakMap por objeto en vez de una propiedad normal). */
+const recipeUIState = new WeakMap();
+function getUIState(recipe){
+  if(!recipeUIState.has(recipe)) recipeUIState.set(recipe, {});
+  return recipeUIState.get(recipe);
+}
+function accordionItem(recipe, key, icon, title, bodyHtml, defaultOpen){
+  const ui = getUIState(recipe);
+  if(!(key in ui)) ui[key] = !!defaultOpen;
+  const isOpen = ui[key];
+  return `
+    <div class="accordion-item${isOpen ? ' open' : ''}" data-section="${key}">
+      <button type="button" class="accordion-header">
+        <span class="acc-icon">${icon}</span>
+        <span class="acc-title">${escapeHtml(title)}</span>
+        <span class="acc-chevron">▾</span>
+      </button>
+      <div class="accordion-body">${bodyHtml}</div>
+    </div>`;
+}
+
 function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = {}){
   lastViewedRecipe = recipe;
   const scale = (recipe.servings || recipe.servings_original) / (recipe.servings_original || recipe.servings || 1);
   const card = document.createElement('div');
   card.className = 'recipe-card';
+  const assignedCat = recipe.category ? findCategory(recipe.category) : null;
+
+  const accordionSections = [
+    recipe.summary ? accordionItem(recipe, 'summary', 'i', 'Resumen', `<p class="card-summary" style="margin-top:0;">${escapeHtml(recipe.summary)}</p>`, true) : '',
+
+    accordionItem(recipe, 'category', '🏷', assignedCat ? `Categoría: ${escapeHtml(assignedCat.name)}` : 'Categoría', `<div class="cat-picker-slot"></div>`, false),
+
+    (recipe.sourceUrl || editable) ? accordionItem(recipe, 'video', '▶', 'Video de origen', `
+      <div class="video-source-field">
+        <input type="text" class="video-url-input" placeholder="Pega aquí el enlace del video (YouTube)..." value="${escapeHtml(recipe.sourceUrl||'')}">
+        <div class="video-preview-slot"></div>
+      </div>`, !!recipe.sourceUrl) : '',
+
+    (recipe.equipment && recipe.equipment.length) ? accordionItem(recipe, 'equipment', '🔧', 'Equipo', `
+      <div class="equip-list">${recipe.equipment.map(e=>`<span>${escapeHtml(e)}</span>`).join('')}</div>`, false) : '',
+
+    (recipe.nutrition && recipe.nutrition.calories_per_serving) ? accordionItem(recipe, 'nutrition', '🥗', 'Nutrición (por porción)', `
+      <div class="nutrition-cal-big" style="margin:4px 0 10px 0;"><span class="num" style="font-size:28px;">${recipe.nutrition.calories_per_serving}</span><span>kcal</span></div>
+      ${macroBar('Proteína', recipe.nutrition.protein_g, 'protein', 60)}
+      ${macroBar('Carbohidratos', recipe.nutrition.carbs_g, 'carbs', 100)}
+      ${macroBar('Grasa', recipe.nutrition.fat_g, 'fat', 50)}
+      ${(recipe.nutrition.vitamins_minerals && recipe.nutrition.vitamins_minerals.length) ? `<div class="nutrition-extra"><strong>Aporta:</strong> ${recipe.nutrition.vitamins_minerals.map(v=>escapeHtml(v)).join(', ')}</div>` : ''}`, false) : '',
+
+    accordionItem(recipe, 'ingredients', '🥣', 'Ingredientes', `
+      <ul class="ingredients">
+        ${recipe.ingredients.map((ing,i)=>`
+          <li data-i="${i}">
+            <input type="checkbox" class="ing-check">
+            <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}
+              ${noAI ? '' : `<button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>`}
+              <div class="ing-sub-note" hidden></div>
+            </label>
+          </li>`).join('')}
+      </ul>`, true),
+
+    accordionItem(recipe, 'steps', '☰', 'Preparación', `
+      <ol class="steps">
+        ${recipe.steps.map((s,i)=>`
+          <li data-i="${i}">
+            <span class="num">${s.number || (i+1)}</span>
+            <div style="flex:1;">
+              <p>${escapeHtml(s.instruction)}</p>
+              ${s.duration_minutes ? `<div class="step-timer"><input type="checkbox" class="step-check"> ⏳ ${s.duration_minutes} min</div>` : `<div class="step-timer"><input type="checkbox" class="step-check"> listo</div>`}
+            </div>
+          </li>`).join('')}
+      </ol>`, true),
+
+    (recipe.tips && recipe.tips.length) ? accordionItem(recipe, 'tips', '💡', 'Consejos', `
+      <div class="tips-box">${recipe.tips.map(t=>escapeHtml(t)).join('<br>')}</div>`, false) : '',
+
+    (recipe.tags && recipe.tags.length) ? accordionItem(recipe, 'tags', '#', 'Etiquetas', `
+      <div class="tags-list">${recipe.tags.map(t=>`<span>#${escapeHtml(t)}</span>`).join('')}</div>`, false) : ''
+  ].join('');
+
   card.innerHTML = `
     <div class="card-holes"><span></span><span></span></div>
     <div class="card-body">
@@ -2131,7 +2285,6 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
       <div class="card-title-row">
         <h2>${escapeHtml(recipe.title || 'Receta sin título')}</h2>
       </div>
-      ${recipe.summary ? `<p class="card-summary">${escapeHtml(recipe.summary)}</p>` : ''}
       <div class="meta-strip">
         ${recipe.total_time_minutes ? `<span class="meta-chip">⏱ ${recipe.total_time_minutes} min total</span>` : ''}
         ${recipe.prep_time_minutes ? `<span class="meta-chip">🔪 ${recipe.prep_time_minutes} min prep.</span>` : ''}
@@ -2145,50 +2298,7 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
         </span>
       </div>
 
-      ${(recipe.equipment && recipe.equipment.length) ? `
-      <div class="section-title">Equipo</div>
-      <div class="equip-list">${recipe.equipment.map(e=>`<span>${escapeHtml(e)}</span>`).join('')}</div>` : ''}
-
-      ${(recipe.nutrition && recipe.nutrition.calories_per_serving) ? `
-      <div class="section-title">Nutrición (por porción)</div>
-      <div class="nutrition-cal-big" style="margin:4px 0 10px 0;"><span class="num" style="font-size:28px;">${recipe.nutrition.calories_per_serving}</span><span>kcal</span></div>
-      ${macroBar('Proteína', recipe.nutrition.protein_g, 'protein', 60)}
-      ${macroBar('Carbohidratos', recipe.nutrition.carbs_g, 'carbs', 100)}
-      ${macroBar('Grasa', recipe.nutrition.fat_g, 'fat', 50)}
-      ${(recipe.nutrition.vitamins_minerals && recipe.nutrition.vitamins_minerals.length) ? `<div class="nutrition-extra"><strong>Aporta:</strong> ${recipe.nutrition.vitamins_minerals.map(v=>escapeHtml(v)).join(', ')}</div>` : ''}
-      ` : ''}
-
-      <div class="section-title">Ingredientes</div>
-      <ul class="ingredients">
-        ${recipe.ingredients.map((ing,i)=>`
-          <li data-i="${i}">
-            <input type="checkbox" class="ing-check">
-            <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}
-              ${noAI ? '' : `<button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>`}
-              <div class="ing-sub-note" hidden></div>
-            </label>
-          </li>`).join('')}
-      </ul>
-
-      <div class="section-title">Preparación</div>
-      <ol class="steps">
-        ${recipe.steps.map((s,i)=>`
-          <li data-i="${i}">
-            <span class="num">${s.number || (i+1)}</span>
-            <div style="flex:1;">
-              <p>${escapeHtml(s.instruction)}</p>
-              ${s.duration_minutes ? `<div class="step-timer"><input type="checkbox" class="step-check"> ⏳ ${s.duration_minutes} min</div>` : `<div class="step-timer"><input type="checkbox" class="step-check"> listo</div>`}
-            </div>
-          </li>`).join('')}
-      </ol>
-
-      ${(recipe.tips && recipe.tips.length) ? `
-      <div class="section-title">Consejos</div>
-      <div class="tips-box">${recipe.tips.map(t=>escapeHtml(t)).join('<br>')}</div>` : ''}
-
-      ${(recipe.tags && recipe.tags.length) ? `
-      <div class="section-title">Etiquetas</div>
-      <div class="tags-list">${recipe.tags.map(t=>`<span>#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      <div class="accordion">${accordionSections}</div>
 
       <div class="card-actions">
         ${noAI ? '' : `<button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>`}
@@ -2204,6 +2314,44 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
   `;
   container.innerHTML = '';
   container.appendChild(card);
+
+  // acordeón: expandir/colapsar cada sección al tocar su encabezado
+  card.querySelectorAll('.accordion-header').forEach(header=>{
+    header.addEventListener('click', ()=>{
+      const item = header.closest('.accordion-item');
+      const key = item.dataset.section;
+      const willOpen = !item.classList.contains('open');
+      getUIState(recipe)[key] = willOpen;
+      item.classList.toggle('open', willOpen);
+    });
+  });
+
+  // selector de categoría (dentro de la sección "Categoría")
+  const catSlot = card.querySelector('.cat-picker-slot');
+  if(catSlot){
+    renderCategoryPicker(catSlot, {
+      selectedId: recipe.category || null,
+      onSelect: (id)=>{
+        recipe.category = id;
+        const header = card.querySelector('.accordion-item[data-section="category"] .acc-title');
+        if(header){
+          const cat = id ? findCategory(id) : null;
+          header.textContent = cat ? `Categoría: ${cat.name}` : 'Categoría';
+        }
+      }
+    });
+  }
+
+  // video de origen: campo editable + miniatura/embed
+  const videoInput = card.querySelector('.video-url-input');
+  const videoSlot = card.querySelector('.video-preview-slot');
+  if(videoInput && videoSlot){
+    renderVideoPreview(videoSlot, recipe.sourceUrl);
+    videoInput.addEventListener('input', ()=>{
+      recipe.sourceUrl = videoInput.value.trim();
+      renderVideoPreview(videoSlot, recipe.sourceUrl);
+    });
+  }
 
   // servings +/-
   card.querySelector('.inc').addEventListener('click', ()=>{ recipe.servings = (recipe.servings||1)+1; renderRecipeCard(recipe, container, {editable, saved, savedId, noAI}); });
@@ -2371,6 +2519,7 @@ function recipeToPlainText(recipe, scale){
   out += `\nPREPARACIÓN:\n`;
   recipe.steps.forEach(s=>{ out += `${s.number}. ${s.instruction}${s.duration_minutes ? ' ('+s.duration_minutes+' min)':''}\n`; });
   if(recipe.tips && recipe.tips.length){ out += `\nCONSEJOS:\n`; recipe.tips.forEach(t=>out+=`- ${t}\n`); }
+  if(recipe.category){ const cat = findCategory(recipe.category); if(cat) out += `\nCategoría: ${cat.name}\n`; }
   if(recipe.sourceUrl) out += `\nFuente: ${recipe.sourceUrl}\n`;
   return out;
 }
@@ -2417,30 +2566,68 @@ async function downloadRecipeAsPDF(card, recipe){
   // Quita todo lo interactivo/no imprimible.
   clone.querySelectorAll('.card-actions, .card-status, .ing-sub-btn, .ing-sub-note, .servings-control .inc, .servings-control .dec').forEach(el=>el.remove());
   clone.querySelectorAll('input[type=checkbox]').forEach(el=>el.remove());
+  // La sección "Categoría" es metadato de la app (para organizar Mis Recetas),
+  // no forma parte de la receta en sí, así que no se incluye en el PDF/impresión.
+  clone.querySelectorAll('.cat-picker-slot').forEach(el=>{ const item = el.closest('.accordion-item'); if(item) item.remove(); });
+  // La sección "Video de origen" se simplifica a una sola línea de texto con el
+  // enlace (se toma del estado en memoria, no del input clonado, para evitar
+  // depender de si el navegador clona correctamente el valor tecleado por el usuario).
+  clone.querySelectorAll('.video-source-field').forEach(field=>{
+    const item = field.closest('.accordion-item');
+    if(!item) return;
+    if(recipe.sourceUrl){
+      const body = item.querySelector('.accordion-body');
+      if(body) body.innerHTML = `<div class="video-link-line">Video: ${escapeHtml(recipe.sourceUrl)}</div>`;
+    } else {
+      item.remove();
+    }
+  });
 
   // Descompone el contenido en bloques pequeños: cada ingrediente y cada paso
   // se vuelve su propio bloque, así una hoja nunca corta a la mitad de un
   // ingrediente o de un paso — el salto de página cae siempre entre bloques.
+  // Recorre tanto los hijos de nivel superior (foto, título, meta) como el
+  // contenido dentro de cada sección plegable (acordeón), ya que esas
+  // secciones pueden estar visualmente cerradas pero deben imprimirse igual.
   const blocks = [];
-  Array.from(clone.children).forEach(child=>{
-    if(child.matches('ul.ingredients')){
-      Array.from(child.children).forEach(li=>{
-        const wrap = document.createElement('ul');
-        wrap.className = 'ingredients';
-        wrap.appendChild(li);
-        blocks.push({ el: wrap, heading:false });
-      });
-    } else if(child.matches('ol.steps')){
-      Array.from(child.children).forEach(li=>{
-        const wrap = document.createElement('ol');
-        wrap.className = 'steps';
-        wrap.appendChild(li);
-        blocks.push({ el: wrap, heading:false });
-      });
-    } else {
-      blocks.push({ el: child, heading: child.classList.contains('section-title') });
-    }
-  });
+  function collectBlocksFrom(el){
+    Array.from(el.children).forEach(child=>{
+      if(child.classList && child.classList.contains('accordion')){
+        Array.from(child.children).forEach(item=>{
+          if(!item.classList || !item.classList.contains('accordion-item')) return;
+          const headerBtn = item.querySelector('.accordion-header');
+          if(headerBtn){
+            const titleEl = headerBtn.querySelector('.acc-title');
+            const headingDiv = document.createElement('div');
+            headingDiv.className = 'section-title';
+            headingDiv.textContent = titleEl ? titleEl.textContent : headerBtn.textContent.trim();
+            blocks.push({ el: headingDiv, heading:true });
+          }
+          const body = item.querySelector('.accordion-body');
+          if(body) collectBlocksFrom(body);
+        });
+        return;
+      }
+      if(child.matches && child.matches('ul.ingredients')){
+        Array.from(child.children).forEach(li=>{
+          const wrap = document.createElement('ul');
+          wrap.className = 'ingredients';
+          wrap.appendChild(li);
+          blocks.push({ el: wrap, heading:false });
+        });
+      } else if(child.matches && child.matches('ol.steps')){
+        Array.from(child.children).forEach(li=>{
+          const wrap = document.createElement('ol');
+          wrap.className = 'steps';
+          wrap.appendChild(li);
+          blocks.push({ el: wrap, heading:false });
+        });
+      } else {
+        blocks.push({ el: child, heading: child.classList && child.classList.contains('section-title') });
+      }
+    });
+  }
+  collectBlocksFrom(clone);
 
   try{
     const { jsPDF } = window.jspdf;
@@ -2514,8 +2701,212 @@ function downloadFile(filename, content, mime){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
+/* ============================= CATEGORÍAS ============================= */
+const CATEGORY_PALETTE = ['#c98a1f','#4b6b4f','#a63d33','#6d9270','#a06e17','#7a5cc9','#2f7a86','#b0562f','#5c6bc0','#8a4a6b','#3a8f5b','#c2571f'];
+
+function slugify(str){
+  return String(str||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+const DEFAULT_CATEGORY_NAMES = [
+  'Mexicana','Rápido y fácil','Entradas','Bebidas','Tabla de embutidos','Fiesta','Bajo en carbohidratos',
+  'A la parrilla','Vegetariana','India','Sin lácteos','Olla de cocción lenta','Asiática','Mediterránea','Postre',
+  'Italiana','Vegana','Entrante','Ensaladas','Días festivos','Guarniciones','Cena','Desayuno','Sopas y guisos',
+  'Almuerzo','Panes y bollos','Salsas y aderezos','Medio Oriente','Bocadillos','Horneados','Francesa','Sin gluten'
+];
+const DEFAULT_CATEGORIES = DEFAULT_CATEGORY_NAMES.map((name, i)=>({
+  id: 'cat_' + slugify(name), name, color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]
+}));
+
+let categories = [];
+let categoriesLoaded = false;
+let activeCategoryFilter = null; // null = "Todas"
+
+async function loadCategories(){
+  if(categoriesLoaded) return categories;
+  const raw = await storeGet('categories');
+  if(raw){
+    try{ categories = JSON.parse(raw); }catch(e){ categories = DEFAULT_CATEGORIES.slice(); }
+  } else {
+    categories = DEFAULT_CATEGORIES.slice();
+    await storeSet('categories', JSON.stringify(categories));
+  }
+  categoriesLoaded = true;
+  return categories;
+}
+
+async function saveCategories(){ await storeSet('categories', JSON.stringify(categories)); }
+
+function findCategory(id){ return categories.find(c=>c.id===id) || null; }
+
+/* Selector de categoría con buscador, usado dentro de la tarjeta de receta para
+   asignar UNA categoría a esa receta en particular. */
+function renderCategoryPicker(container, {selectedId, onSelect}){
+  container.innerHTML = '';
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'cat-search';
+  searchWrap.innerHTML = `<input type="text" placeholder="Buscar categoría...">`;
+  const grid = document.createElement('div');
+  grid.className = 'cat-chip-grid';
+  let current = selectedId || null;
+
+  function paint(filterText){
+    grid.innerHTML = '';
+    const noneBtn = document.createElement('button');
+    noneBtn.type = 'button';
+    noneBtn.className = 'cat-chip none-chip' + (!current ? ' selected' : '');
+    noneBtn.textContent = 'Sin categoría';
+    if(!current){ noneBtn.style.background = 'var(--ink)'; }
+    noneBtn.addEventListener('click', ()=>{ current = null; onSelect(null); paint(searchInput.value); });
+    grid.appendChild(noneBtn);
+
+    categories
+      .filter(c=> !filterText || c.name.toLowerCase().includes(filterText.toLowerCase()))
+      .forEach(cat=>{
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cat-chip' + (current === cat.id ? ' selected' : '');
+        btn.textContent = cat.name;
+        btn.style.borderColor = cat.color;
+        if(current === cat.id){ btn.style.background = cat.color; } else { btn.style.color = cat.color; }
+        btn.addEventListener('click', ()=>{ current = cat.id; onSelect(cat.id); paint(searchInput.value); });
+        grid.appendChild(btn);
+      });
+  }
+
+  const searchInput = searchWrap.querySelector('input');
+  searchInput.addEventListener('input', ()=> paint(searchInput.value));
+  container.appendChild(searchWrap);
+  container.appendChild(grid);
+  paint('');
+}
+
+/* Barra de filtro por categoría + acceso a "Administrar categorías", en la pestaña Mis Recetas. */
+async function renderCategoryFilterBar(){
+  await loadCategories();
+  const bar = document.getElementById('categoryFilterBar');
+  if(!bar) return;
+  bar.innerHTML = '';
+
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.className = 'cat-chip' + (activeCategoryFilter===null ? ' selected' : '');
+  allBtn.textContent = 'Todas';
+  if(activeCategoryFilter===null) allBtn.style.background = 'var(--ink)';
+  allBtn.addEventListener('click', ()=>{ activeCategoryFilter = null; renderCategoryFilterBar(); renderRecipesGrid(); });
+  bar.appendChild(allBtn);
+
+  categories.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cat-chip' + (activeCategoryFilter===cat.id ? ' selected' : '');
+    btn.textContent = cat.name;
+    btn.style.borderColor = cat.color;
+    if(activeCategoryFilter===cat.id){ btn.style.background = cat.color; } else { btn.style.color = cat.color; }
+    btn.addEventListener('click', ()=>{ activeCategoryFilter = cat.id; renderCategoryFilterBar(); renderRecipesGrid(); });
+    bar.appendChild(btn);
+  });
+
+  const manageBtn = document.createElement('button');
+  manageBtn.type = 'button';
+  manageBtn.className = 'secondary';
+  manageBtn.textContent = '⚙️ Administrar categorías';
+  manageBtn.addEventListener('click', toggleCategoryManagePanel);
+  bar.appendChild(manageBtn);
+}
+
+function toggleCategoryManagePanel(){
+  const panel = document.getElementById('categoryManagePanel');
+  panel.hidden = !panel.hidden;
+  if(!panel.hidden) renderCategoryManagePanel();
+}
+
+function renderCategoryManagePanel(){
+  const panel = document.getElementById('categoryManagePanel');
+  panel.innerHTML = `
+    <div class="plan-summary" style="margin-top:0 0 14px 0;">
+      <h3 style="font-size:16px; margin-bottom:10px;">Administrar categorías</h3>
+      <p class="card-summary" style="margin-top:0;">Toca la ✕ para eliminar una categoría (las recetas que la tengan asignada quedarán "Sin categoría").</p>
+      <div class="cat-chip-grid" id="manageCatGrid"></div>
+      <div class="cat-manage-row">
+        <input type="text" id="newCategoryInput" placeholder="Nueva categoría...">
+        <button type="button" id="addCategoryBtn">➕ Agregar</button>
+      </div>
+    </div>`;
+  const grid = panel.querySelector('#manageCatGrid');
+  categories.forEach(cat=>{
+    const chip = document.createElement('span');
+    chip.className = 'cat-chip';
+    chip.style.borderColor = cat.color;
+    chip.style.color = cat.color;
+    chip.innerHTML = `${escapeHtml(cat.name)} <button type="button" class="cat-chip-remove" data-id="${cat.id}" title="Eliminar categoría">✕</button>`;
+    grid.appendChild(chip);
+  });
+  grid.querySelectorAll('.cat-chip-remove').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if(!confirm('¿Eliminar esta categoría? Las recetas que la tengan asignada quedarán sin categoría.')) return;
+      categories = categories.filter(c=>c.id !== id);
+      await saveCategories();
+      if(activeCategoryFilter === id) activeCategoryFilter = null;
+      renderCategoryManagePanel();
+      renderCategoryFilterBar();
+      renderRecipesGrid();
+    });
+  });
+  const addBtn = panel.querySelector('#addCategoryBtn');
+  const doAdd = async ()=>{
+    const input = panel.querySelector('#newCategoryInput');
+    const name = input.value.trim();
+    if(!name) return;
+    const id = 'cat_' + slugify(name) + '_' + Date.now().toString(36);
+    categories.push({ id, name, color: CATEGORY_PALETTE[categories.length % CATEGORY_PALETTE.length] });
+    await saveCategories();
+    input.value = '';
+    renderCategoryManagePanel();
+    renderCategoryFilterBar();
+  };
+  addBtn.addEventListener('click', doAdd);
+  panel.querySelector('#newCategoryInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); doAdd(); } });
+}
+
+/* ============================= VIDEO DE ORIGEN ============================= */
+function extractYouTubeId(url){
+  if(!url) return null;
+  const patterns = [
+    /youtube\.com\/watch\?[^#]*\bv=([\w-]{11})/,
+    /youtu\.be\/([\w-]{11})/,
+    /youtube\.com\/shorts\/([\w-]{11})/,
+    /youtube\.com\/embed\/([\w-]{11})/
+  ];
+  for(const re of patterns){
+    const m = url.match(re);
+    if(m) return m[1];
+  }
+  return null;
+}
+
+function renderVideoPreview(slot, url){
+  const ytId = extractYouTubeId(url);
+  if(!ytId){
+    slot.innerHTML = url ? `<div class="video-link-line">🔗 <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>` : '';
+    return;
+  }
+  slot.innerHTML = `
+    <div class="video-thumb-wrap" data-ytid="${ytId}">
+      <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Miniatura del video">
+      <div class="video-play-overlay"><span>▶</span></div>
+    </div>`;
+  slot.querySelector('.video-thumb-wrap').addEventListener('click', function(){
+    const id = this.dataset.ytid;
+    slot.innerHTML = `<div class="video-embed-wrap"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1" title="Video de la receta" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  });
+}
+
 /* ============================= MY RECIPES GRID ============================= */
 async function renderRecipesGrid(){
+  await loadCategories();
   const grid = document.getElementById('recipesGrid');
   const empty = document.getElementById('emptyRecipes');
   const idxRaw = await storeGet('recipe-index');
@@ -2523,12 +2914,16 @@ async function renderRecipesGrid(){
   try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
   grid.innerHTML = '';
   if(!idx.length){ empty.hidden = false; return; }
-  empty.hidden = true;
+
+  let shown = 0;
   for(const id of idx){
     const raw = await storeGet('recipe:'+id);
     if(!raw) continue;
     let recipe;
     try{ recipe = JSON.parse(raw); }catch(e){ continue; }
+    if(activeCategoryFilter && recipe.category !== activeCategoryFilter) continue;
+    shown++;
+    const cat = recipe.category ? findCategory(recipe.category) : null;
     const mini = document.createElement('div');
     mini.className = 'recipe-mini';
     mini.innerHTML = `
@@ -2536,6 +2931,7 @@ async function renderRecipesGrid(){
       <div class="mini-body">
         <h3>${escapeHtml(recipe.title||'Sin título')}</h3>
         <div class="mini-meta">${recipe.servings||'-'} porciones · ${recipe.total_time_minutes||'-'} min</div>
+        ${cat ? `<span class="cat-chip" style="align-self:flex-start; border-color:${cat.color}; color:${cat.color}; padding:3px 10px; font-size:11.5px;">${escapeHtml(cat.name)}</span>` : ''}
         <div class="mini-actions"><button type="button" class="ghost">Ver →</button></div>
       </div>`;
     mini.addEventListener('click', ()=>{
@@ -2544,6 +2940,14 @@ async function renderRecipesGrid(){
       window.scrollTo({top:0, behavior:'smooth'});
     });
     grid.appendChild(mini);
+  }
+  empty.hidden = shown > 0;
+  if(!shown && idx.length){
+    empty.hidden = false;
+    empty.textContent = 'No hay recetas guardadas en esta categoría todavía.';
+  } else if(!idx.length){
+    empty.hidden = false;
+    empty.textContent = 'Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".';
   }
 }
 
@@ -2643,10 +3047,19 @@ if(!fbBlocked){
       document.getElementById('appShell').hidden = false;
       document.getElementById('userEmailLabel').textContent = user.email || '';
       await loadSettings();
+      await loadCategories();
+      renderCategoryFilterBar();
       renderRecipesGrid();
     } else {
       document.getElementById('appShell').hidden = true;
       document.getElementById('authGate').hidden = false;
+      const warnEl = document.getElementById('persistenceWarning');
+      if(sessionPersistenceWarning){
+        warnEl.hidden = false;
+        warnEl.innerHTML = `<div class="status error" style="margin-bottom:6px;">⚠️<div>Este navegador no permitió guardar tu sesión de forma persistente, así que es probable que te pida iniciar sesión de nuevo cada vez. Esto suele pasar en modo incógnito, con las cookies/almacenamiento de terceros bloqueados, o si el sitio se abre desde una "pestaña personalizada" de otra app. Detalle técnico: ${escapeHtml(sessionPersistenceWarning)}</div></div>`;
+      } else {
+        warnEl.hidden = true;
+      }
     }
   });
 } else {
@@ -2654,6 +3067,8 @@ if(!fbBlocked){
   document.getElementById('authGate').hidden = true;
   document.getElementById('appShell').hidden = false;
   await loadSettings();
+  await loadCategories();
+  renderCategoryFilterBar();
   renderRecipesGrid();
 }
 
