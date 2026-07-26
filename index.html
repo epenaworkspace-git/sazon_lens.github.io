@@ -676,14 +676,14 @@
       </div>
       <img id="imagePreview" hidden>
     </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Información adicional (opcional)</label>
+      <textarea id="imageExtraInfo" style="min-height:70px; resize:vertical;" placeholder="Cualquier detalle que quieras darle a la IA. Ej: 'la porción es para 2 personas', 'no lleva cilantro', 'es una versión sin gluten'..."></textarea>
+      <span class="hint">Es opcional — puedes dejarlo en blanco. Si ya generaste la receta y quieres corregirla o darle más detalle, también puedes editar este campo y volver a presionar "Extraer receta de la imagen" para regenerarla.</span>
+    </div>
     <div class="url-form" style="margin-top:12px;">
       <button id="extractImageBtn" disabled>Extraer receta de la imagen</button>
       <button class="secondary" id="clearImageBtn" type="button" hidden>Quitar imagen</button>
-    </div>
-    <div class="field" style="margin-top:12px;">
-      <label>Información adicional (opcional)</label>
-      <textarea id="imageExtraInfo" style="min-height:70px; resize:vertical;" placeholder="Aclaraciones, correcciones o detalles que quieras agregar antes (o después) de generar la receta. Ej: 'la porción es para 2 personas', 'no lleva cilantro', 'es una versión sin gluten'..."></textarea>
-      <span class="hint">Si ya generaste la receta y quieres corregirla o darle más detalle, edita este campo y vuelve a presionar "Extraer receta de la imagen".</span>
     </div>
     <div id="imageStatusArea"></div>
     <div id="imageRecipeResult"></div>
@@ -2190,7 +2190,7 @@ function renderShoppingList(list, checkedIdx){
     </div>
     <div id="shoppingListStatusArea"></div>
     <div class="card-actions">
-      <button type="button" class="secondary" id="saveShoppingListBtn">💾 Guardar progreso</button>
+      <button type="button" class="secondary" id="saveShoppingListBtn">💾 Guardar</button>
       <button type="button" class="secondary" id="copyShoppingListBtn">📋 Copiar lista</button>
     </div>
   `;
@@ -2912,6 +2912,9 @@ const DEFAULT_CATEGORIES = DEFAULT_CATEGORY_NAMES.map((name, i)=>({
 let categories = [];
 let categoriesLoaded = false;
 let activeCategoryFilter = null; // null = "Todas"
+/* Pila de categorías eliminadas durante esta sesión (se pierde al recargar
+   la página o cerrar sesión), para poder deshacer eliminaciones accidentales. */
+let deletedCategoryStack = [];
 
 async function loadCategories(){
   if(categoriesLoaded) return categories;
@@ -3023,6 +3026,11 @@ function renderCategoryManagePanel(){
         <input type="text" id="newCategoryInput" placeholder="Nueva categoría...">
         <button type="button" id="addCategoryBtn">➕ Agregar</button>
       </div>
+      <div class="card-actions" style="margin-top:14px;">
+        <button type="button" class="secondary" id="undoDeleteCategoryBtn" ${deletedCategoryStack.length ? '' : 'disabled'}>↩️ Deshacer eliminación${deletedCategoryStack.length ? ' (' + deletedCategoryStack.length + ')' : ''}</button>
+        <button type="button" class="secondary" id="resetCategoriesBtn">🔄 Restaurar categorías predeterminadas</button>
+      </div>
+      <div id="categoryManageStatusArea"></div>
     </div>`;
   const grid = panel.querySelector('#manageCatGrid');
   categories.forEach(cat=>{
@@ -3038,7 +3046,10 @@ function renderCategoryManagePanel(){
       e.stopPropagation();
       const id = btn.dataset.id;
       if(!confirm('¿Eliminar esta categoría? Las recetas que la tengan asignada quedarán sin categoría.')) return;
-      categories = categories.filter(c=>c.id !== id);
+      const index = categories.findIndex(c=>c.id === id);
+      if(index === -1) return;
+      const [removed] = categories.splice(index, 1);
+      deletedCategoryStack.push({ category: removed, index });
       await saveCategories();
       if(activeCategoryFilter === id) activeCategoryFilter = null;
       renderCategoryManagePanel();
@@ -3060,6 +3071,37 @@ function renderCategoryManagePanel(){
   };
   addBtn.addEventListener('click', doAdd);
   panel.querySelector('#newCategoryInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); doAdd(); } });
+  panel.querySelector('#undoDeleteCategoryBtn').addEventListener('click', undoDeleteCategory);
+  panel.querySelector('#resetCategoriesBtn').addEventListener('click', resetCategoriesToDefault);
+}
+
+/* Restaura la última categoría eliminada durante esta sesión, en la posición
+   donde estaba. Se puede presionar varias veces para deshacer varias
+   eliminaciones seguidas. La pila se pierde al recargar la página o cerrar sesión. */
+async function undoDeleteCategory(){
+  if(!deletedCategoryStack.length) return;
+  const { category, index } = deletedCategoryStack.pop();
+  const insertAt = Math.min(index, categories.length);
+  categories.splice(insertAt, 0, category);
+  await saveCategories();
+  renderCategoryManagePanel();
+  renderCategoryFilterBar();
+  renderRecipesGrid();
+  setStatus('categoryManageStatusArea','ok', `Se restauró la categoría "${category.name}".`);
+}
+
+/* Reinicia las categorías a la lista predeterminada de fábrica, descartando
+   cualquier categoría personalizada o eliminación hecha por el usuario. */
+async function resetCategoriesToDefault(){
+  if(!confirm('¿Restaurar las categorías predeterminadas? Esto reemplazará tu lista actual de categorías por la lista original de fábrica. Las recetas conservarán la categoría asignada solo si el nombre coincide con una de las categorías predeterminadas.')) return;
+  categories = DEFAULT_CATEGORIES.map(c=>({ ...c }));
+  deletedCategoryStack = [];
+  activeCategoryFilter = null;
+  await saveCategories();
+  renderCategoryManagePanel();
+  renderCategoryFilterBar();
+  renderRecipesGrid();
+  setStatus('categoryManageStatusArea','ok','Se restauraron las categorías predeterminadas.');
 }
 
 /* ============================= VIDEO DE ORIGEN ============================= */
