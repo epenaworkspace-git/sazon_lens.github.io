@@ -204,11 +204,18 @@
     color:#fff8ee; border:none;
     box-shadow:0 10px 24px -6px rgba(166,111,23,.55), 0 3px 8px rgba(36,31,26,.25);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    animation:fabBounce 2.6s ease-in-out infinite;
+    cursor:pointer; overflow:hidden;
+    animation:fabBounce 2.8s cubic-bezier(.34,1.56,.64,1) infinite;
     transition:box-shadow .2s var(--ease), transform .2s var(--ease), background .2s;
   }
-  #chatFab .chef-hat-icon{ width:52px; height:52px; object-fit:contain; border-radius:50%; filter:drop-shadow(0 1px 2px rgba(36,31,26,.35)); }
+  #chatFab::after{
+    content:""; position:absolute; top:-60%; left:-70%; width:45%; height:230%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.65), transparent);
+    transform:rotate(20deg);
+    animation:fabShine 3.6s ease-in-out infinite;
+    pointer-events:none;
+  }
+  #chatFab .chef-hat-icon{ width:52px; height:52px; object-fit:contain; border-radius:50%; filter:drop-shadow(0 1px 2px rgba(36,31,26,.35)); position:relative; }
   @media (max-width:640px){
     #chatFab{ width:70px; height:70px; bottom:18px; right:16px; }
     #chatFab .chef-hat-icon{ width:46px; height:46px; }
@@ -219,8 +226,17 @@
     animation-play-state:paused; transform:translateY(-3px) scale(1.05);
   }
   @keyframes fabBounce{
-    0%,100%{ transform:translateY(0); }
-    50%{ transform:translateY(-5px); }
+    0%, 100%{ transform:translateY(0) scale(1); }
+    22%{ transform:translateY(-14px) scale(1.05); }
+    38%{ transform:translateY(3px) scale(.96); }
+    52%{ transform:translateY(-6px) scale(1.02); }
+    68%{ transform:translateY(1px) scale(.99); }
+    80%{ transform:translateY(0) scale(1); }
+  }
+  @keyframes fabShine{
+    0%{ left:-70%; }
+    28%{ left:130%; }
+    100%{ left:130%; }
   }
   #chatPanel{
     position:fixed; bottom:88px; right:20px; z-index:60; width:min(560px, 94vw); max-height:82vh;
