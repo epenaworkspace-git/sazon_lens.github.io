@@ -325,6 +325,8 @@
     border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
     flex-wrap:wrap;
   }
+  .url-form input[type=text]{ flex:1; min-width:160px; }
+  .icon-btn{ padding:11px 16px; flex:0 0 auto; font-size:22px; }
   input[type=text], input[type=password], input[type=number], select, textarea{
     font-family:'Inter',sans-serif; font-size:14.5px;
     border:1px solid var(--line); border-radius:var(--radius-sm); padding:11px 13px;
@@ -473,18 +475,18 @@
   .accordion{ display:grid; gap:10px; margin-top:18px; }
   .accordion-item{ border:1px solid var(--line); border-radius:14px; background:#fffdf8; overflow:hidden; }
   .accordion-header{
-    width:100%; display:flex; align-items:center; gap:10px; padding:13px 16px;
+    width:100%; display:flex; align-items:center; gap:12px; padding:15px 16px;
     background:transparent; border:none; cursor:pointer; text-align:left; box-shadow:none;
     font-family:'Fraunces',serif; font-weight:700; font-size:15.5px; color:var(--herb-dark);
     transition: background .15s var(--ease); border-radius:0;
   }
   .accordion-header:hover{ background:var(--paper-dark); transform:none; box-shadow:none; }
   .accordion-header .acc-icon{
-    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--herb); color:var(--herb-dark);
-    display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; background:transparent;
+    width:38px; height:38px; border-radius:50%; border:1.5px solid var(--herb); color:var(--herb-dark);
+    display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; background:transparent;
   }
   .accordion-header .acc-title{ flex:1; }
-  .accordion-header .acc-chevron{ font-size:12px; color:var(--herb-dark); transition: transform .2s var(--ease); flex-shrink:0; }
+  .accordion-header .acc-chevron{ font-size:15px; color:var(--herb-dark); transition: transform .2s var(--ease); flex-shrink:0; }
   .accordion-item.open .acc-chevron{ transform:rotate(180deg); }
   .accordion-body{ padding:0 16px 16px 16px; display:none; }
   .accordion-item.open .accordion-body{ display:block; animation:fade .2s var(--ease); }
@@ -505,17 +507,17 @@
   .cat-chip-remove{ margin-left:6px; opacity:.75; background:none; border:none; padding:0; box-shadow:none; color:inherit; font-size:12px; }
   .cat-chip-remove:hover{ opacity:1; background:none; box-shadow:none; transform:none; }
   .cat-emoji-btn{
-    background:none; border:none; box-shadow:none; padding:0; margin-right:4px;
-    font-size:15px; line-height:1; cursor:pointer; transform:none;
+    background:none; border:none; box-shadow:none; padding:0; margin-right:6px;
+    font-size:22px; line-height:1; cursor:pointer; transform:none;
   }
   .cat-emoji-btn:hover{ transform:scale(1.2); box-shadow:none; background:none; }
   .emoji-picker-grid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(38px,1fr)); gap:4px;
-    max-height:220px; overflow-y:auto; margin-top:10px; padding:8px;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(48px,1fr)); gap:6px;
+    max-height:280px; overflow-y:auto; margin-top:10px; padding:10px;
     background:var(--paper-dark); border-radius:10px; border:1px solid var(--line);
   }
   .emoji-picker-item{
-    background:none; border:none; box-shadow:none; font-size:20px; padding:4px;
+    background:none; border:none; box-shadow:none; font-size:28px; padding:6px;
     border-radius:8px; cursor:pointer; transform:none;
   }
   .emoji-picker-item:hover{ background:#fffdf8; box-shadow:none; transform:scale(1.15); }
@@ -565,7 +567,7 @@
   .card-hero-placeholder{ height:auto; min-height:150px; flex-direction:column; gap:10px; padding:20px 16px; }
   .card-hero-placeholder .act-image{ width:max-content; }
   .recipe-mini img{ width:100%; height:120px; object-fit:cover; background:var(--paper-dark); }
-  .recipe-mini .ph{ width:100%; height:120px; background:var(--paper-dark); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:24px;}
+  .recipe-mini .ph{ width:100%; height:120px; background:var(--paper-dark); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:40px;}
   .recipe-mini .mini-body{ padding:12px; flex:1; display:flex; flex-direction:column; gap:6px; }
   .recipe-mini h3{ font-size:15.5px; line-height:1.25; }
   .recipe-mini .mini-meta{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
@@ -682,6 +684,8 @@
     </div>
     <div class="url-form">
       <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
+      <button type="button" class="secondary icon-btn" id="clearVideoUrlBtn" title="Limpiar">🗑️</button>
+      <button type="button" class="secondary icon-btn" id="pasteVideoUrlBtn" title="Pegar desde el portapapeles">📋</button>
       <button id="extractBtn">Extraer receta</button>
     </div>
     <div class="platform-hint" id="platformHint"></div>
@@ -744,6 +748,8 @@
     </div>
     <div class="url-form">
       <input type="text" id="pageUrl" placeholder="https://ejemplo.com/receta-de-tacos">
+      <button type="button" class="secondary icon-btn" id="clearPageUrlBtn" title="Limpiar">🗑️</button>
+      <button type="button" class="secondary icon-btn" id="pastePageUrlBtn" title="Pegar desde el portapapeles">📋</button>
       <button id="extractUrlBtn">Extraer receta</button>
     </div>
     <div id="urlStatusArea"></div>
@@ -1736,6 +1742,40 @@ async function generateImageViaPredict(model, prompt){
 /* ============================= EXTRACT FLOW ============================= */
 document.getElementById('extractBtn').addEventListener('click', doExtract);
 document.getElementById('videoUrl').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doExtract(); });
+
+/* Botones de "Limpiar" y "Pegar" reutilizables para los campos de enlace,
+   tanto para el video de YouTube como para la página web de la receta.
+   "Pegar" ya limpia por sí solo lo que hubiera antes, en un solo toque
+   (el botón de "Limpiar" se conserva aparte, por si solo se quiere vaciar). */
+async function pasteIntoField(inputId, statusAreaId){
+  const input = document.getElementById(inputId);
+  try{
+    const text = await navigator.clipboard.readText();
+    input.value = ''; // se limpia lo anterior justo antes de pegar lo nuevo
+    if(text && text.trim()){
+      input.value = text.trim();
+      if(statusAreaId) clearStatus(statusAreaId);
+    }
+    input.focus();
+  }catch(e){
+    if(statusAreaId){
+      setStatus(statusAreaId,'info','No se pudo leer el portapapeles automáticamente (el navegador no lo permitió aquí). Mantén presionado el campo y elige "Pegar" manualmente.');
+    }
+    input.focus();
+  }
+}
+document.getElementById('clearVideoUrlBtn').addEventListener('click', ()=>{
+  const el = document.getElementById('videoUrl');
+  el.value = '';
+  el.dispatchEvent(new Event('input'));
+  el.focus();
+  clearStatus('statusArea');
+});
+document.getElementById('pasteVideoUrlBtn').addEventListener('click', ()=>{
+  pasteIntoField('videoUrl','statusArea').then(()=>{
+    document.getElementById('videoUrl').dispatchEvent(new Event('input'));
+  });
+});
 
 async function doExtract(){
   const url = document.getElementById('videoUrl').value.trim();
@@ -3387,7 +3427,17 @@ async function renderCategoryFilterBar(){
     btn.textContent = cat.name;
     btn.style.borderColor = cat.color;
     if(activeCategoryFilter===cat.id){ btn.style.background = cat.color; } else { btn.style.color = cat.color; }
-    btn.addEventListener('click', ()=>{ activeCategoryFilter = cat.id; renderCategoryFilterBar(); renderRecipesGrid(); });
+    btn.addEventListener('click', ()=>{
+      activeCategoryFilter = cat.id;
+      // Se abre automáticamente el panel de esa categoría (será el único visible)
+      // para que el usuario no tenga que tocarlo de nuevo.
+      recipeGroupOpenState[cat.id] = true;
+      // Se cierra el campo de "Filtrar por categoría" para no tener que hacer
+      // scroll de más: ya se eligió, así que se guarda hasta que se vuelva a abrir.
+      document.getElementById('categoryFilterPanel')?.classList.remove('open');
+      renderCategoryFilterBar();
+      renderRecipesGrid();
+    });
     bar.appendChild(btn);
   });
 
@@ -3567,37 +3617,85 @@ function looksLikeUrl(text){
 function ensureProtocol(url){
   return /^https?:\/\//i.test(url) ? url : 'https://' + url;
 }
-const RECIPE_KEYWORDS_RE = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
+const RECIPE_KEYWORDS_RE = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|cucharadita|taza|gramos?|mililitros?|hornear|cocinar|sirve|rinde|pasos?/gi;
 /* La gran mayoría de blogs y sitios de recetas NO envían los encabezados CORS
    (Access-Control-Allow-Origin) necesarios para que un sitio externo como
    Sazón Lens pueda leer su HTML directamente desde el navegador — es una
    restricción de seguridad del propio navegador, no algo que se pueda evitar
-   con código. Por eso, si la lectura directa falla, se reintenta a través de
-   un proxy CORS público (allorigins.win) que sí devuelve el contenido con
-   los encabezados correctos. Este proxy es un servicio de terceros gratuito:
-   si algún día deja de funcionar o está caído, la lectura de esa página en
-   particular fallará y habrá que buscar un proxy alternativo. */
+   con código. Por eso, si la lectura directa falla, se reintenta con varios
+   proxies/servicios de lectura de páginas, uno tras otro, hasta que alguno
+   funcione. Esto hace la extracción mucho más consistente: si un solo
+   servicio fallara, se cae en no detectar receta aunque sí la tuviera. */
+async function fetchWithTimeout(url, ms){
+  const controller = new AbortController();
+  const t = setTimeout(()=>controller.abort(), ms);
+  try{ return await fetch(url, { signal: controller.signal }); }
+  finally{ clearTimeout(t); }
+}
 async function fetchRawHtml(url){
+  // 1) Lectura directa (funciona cuando el sitio sí manda encabezados CORS)
   try{
-    const res = await fetch(url, { mode:'cors' });
-    if(res.ok) return await res.text();
-  }catch(directErr){ /* bloqueado por CORS o sin red — se intenta el proxy abajo */ }
-  try{
-    const proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-    const res = await fetch(proxied);
-    if(res.ok) return await res.text();
-  }catch(proxyErr){ /* el proxy de respaldo tampoco respondió */ }
+    const res = await fetchWithTimeout(url, 9000);
+    if(res.ok){ const text = await res.text(); if(text && text.length > 200) return text; }
+  }catch(directErr){ /* bloqueado por CORS, sin red, o tardó demasiado */ }
+
+  // 2) Varios proxies/lectores de página de respaldo, en orden, hasta que uno funcione
+  const fallbacks = [
+    'https://r.jina.ai/' + url,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?url=' + encodeURIComponent(url)
+  ];
+  for(const proxied of fallbacks){
+    try{
+      const res = await fetchWithTimeout(proxied, 12000);
+      if(res.ok){ const text = await res.text(); if(text && text.length > 200) return text; }
+    }catch(proxyErr){ /* se intenta el siguiente proxy de la lista */ }
+  }
   return null;
+}
+/* Muchos blogs de recetas incluyen los datos de la receta en formato
+   estructurado (JSON-LD, schema.org "Recipe") pensado para que Google los
+   lea — es la fuente MÁS confiable posible, así que se busca primero. */
+function extractJsonLdRecipeText(doc){
+  try{
+    const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+    for(const s of scripts){
+      let data;
+      try{ data = JSON.parse(s.textContent); }catch(e){ continue; }
+      const candidates = Array.isArray(data) ? data : (Array.isArray(data['@graph']) ? data['@graph'] : [data]);
+      for(const item of candidates){
+        if(!item) continue;
+        const type = item['@type'];
+        const isRecipe = type === 'Recipe' || (Array.isArray(type) && type.includes('Recipe'));
+        if(isRecipe) return JSON.stringify(item).slice(0, 12000);
+      }
+    }
+  }catch(e){ /* si algo falla aquí, simplemente se sigue con el texto visible normal */ }
+  return null;
+}
+/* Extrae el texto visible de la página usando textContent (no innerText):
+   innerText depende de que el documento esté realmente renderizado en
+   pantalla, y un documento creado con DOMParser NO lo está — por eso a veces
+   devolvía texto vacío o incompleto y la detección de receta era inconsistente.
+   textContent, en cambio, funciona igual de bien esté o no renderizado. */
+function extractVisibleText(doc){
+  doc.querySelectorAll('script,style,noscript,nav,header,footer,iframe,svg,form').forEach(el=>el.remove());
+  const text = (doc.body ? doc.body.textContent : '') || '';
+  return text.replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n').trim();
 }
 async function fetchPageCookingText(url){
   const html = await fetchRawHtml(url);
   if(html === null){
-    throw new Error('No se pudo leer esa página (ni directamente ni a través del proxy de respaldo). Puede que el sitio esté caído, bloqueando el acceso, o que el proxy esté temporalmente fuera de servicio. Prueba con otra página o intenta de nuevo en un momento.');
+    throw new Error('No se pudo leer esa página (se intentó de forma directa y con varios proxies de respaldo). Puede que el sitio esté caído o bloqueando el acceso. Prueba con otra página o intenta de nuevo en un momento.');
   }
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
+
+  const jsonLd = extractJsonLdRecipeText(doc);
+  if(jsonLd) return jsonLd;
+
+  const bodyText = extractVisibleText(doc);
   const matches = (bodyText.match(RECIPE_KEYWORDS_RE) || []).length;
-  if(matches < 3){
+  if(matches < 2){
     const err = new Error('No se detectó ninguna receta en esa página. Prueba pegando el enlace directo al artículo de la receta 🙂');
     err.noRecipeDetected = true;
     throw err;
@@ -3621,6 +3719,15 @@ async function extractRecipeFromWebPage(url, pageText){
 }
 document.getElementById('extractUrlBtn').addEventListener('click', doExtractFromUrl);
 document.getElementById('pageUrl').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doExtractFromUrl(); });
+document.getElementById('clearPageUrlBtn').addEventListener('click', ()=>{
+  const el = document.getElementById('pageUrl');
+  el.value = '';
+  el.focus();
+  clearStatus('urlStatusArea');
+});
+document.getElementById('pastePageUrlBtn').addEventListener('click', ()=>{
+  pasteIntoField('pageUrl','urlStatusArea');
+});
 async function doExtractFromUrl(){
   const raw = document.getElementById('pageUrl').value.trim();
   document.getElementById('urlRecipeResult').innerHTML = '';
