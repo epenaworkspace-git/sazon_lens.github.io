@@ -152,30 +152,30 @@
 
   .plan-summary{
     background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
-    box-shadow:var(--shadow); padding:20px; margin-top:18px;
+    box-shadow:var(--shadow); padding:20px; margin-top:18px; font-size:16px;
   }
   .plan-macros{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
-  .plan-macro-chip{ background:var(--paper-dark); border-radius:10px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; }
-  .plan-macro-chip b{ display:block; font-size:16px; color:var(--accent-dark); }
+  .plan-macro-chip{ background:var(--paper-dark); border-radius:10px; padding:10px 16px; font-family:'IBM Plex Mono',monospace; font-size:15px; text-align:center; }
+  .plan-macro-chip b{ display:block; font-size:20px; color:var(--accent-dark); }
   .plan-days{ display:grid; gap:14px; margin-top:16px; }
   .plan-day-card{
-    background:#fffdf8; border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    background:#fffdf8; border:1px solid var(--line); border-radius:12px; padding:16px 18px;
   }
-  .plan-day-title{ font-family:'Fraunces',serif; font-weight:700; color:var(--herb-dark); margin-bottom:8px; }
-  .plan-meal{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px dashed var(--line); }
+  .plan-day-title{ font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--herb-dark); margin-bottom:8px; }
+  .plan-meal{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px dashed var(--line); }
   .plan-meal:first-of-type{ border-top:none; }
   .plan-meal-info{ flex:1; }
-  .plan-meal-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
-  .plan-meal-title{ font-weight:600; margin:2px 0; }
-  .plan-meal-desc{ font-size:13px; color:var(--ink-soft); line-height:1.4; }
-  .plan-meal-cal{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent-dark); white-space:nowrap; }
-  .plan-meal-recipe-btn{ background:transparent; color:var(--herb-dark); border:1px solid var(--herb); border-radius:8px; padding:4px 10px; font-size:12px; margin-top:6px; }
+  .plan-meal-label{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
+  .plan-meal-title{ font-weight:600; font-size:17px; margin:3px 0; }
+  .plan-meal-desc{ font-size:15.5px; color:var(--ink-soft); line-height:1.5; }
+  .plan-meal-cal{ font-family:'IBM Plex Mono',monospace; font-size:14.5px; color:var(--accent-dark); white-space:nowrap; }
+  .plan-meal-recipe-btn{ background:transparent; color:var(--herb-dark); border:1px solid var(--herb); border-radius:8px; padding:6px 12px; font-size:14.5px; margin-top:8px; }
   .plan-tips{ background:#f4ecd7; border-left:3px solid var(--accent); padding:12px 16px; border-radius:0 8px 8px 0; font-size:17px; line-height:1.6; margin-top:14px; }
 
   /* ---------- Registro rápido / nutrición ---------- */
   .nutrition-card{
     background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
-    box-shadow:var(--shadow); padding:22px; margin-top:18px;
+    box-shadow:var(--shadow); padding:22px; margin-top:18px; font-size:16px;
   }
   .nutrition-cal-big{ display:flex; align-items:baseline; gap:8px; margin:10px 0 18px 0; }
   .nutrition-cal-big .num{ font-family:'Fraunces',serif; font-weight:900; font-size:42px; color:var(--accent-dark); }
@@ -187,12 +187,13 @@
   .nutrition-bar-fill.fat{ background:var(--rust); }
   .nutrition-extra{ margin-top:14px; font-size:16px; line-height:1.6; color:var(--ink-soft); }
   .shopping-list{ display:grid; gap:14px; margin-top:14px; }
-  .shopping-aisle{ background:#fffdf8; border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
-  .shopping-aisle h4{ font-family:'Fraunces',serif; color:var(--herb-dark); margin:0 0 8px 0; font-size:15px; }
-  .shopping-aisle label{ display:flex; gap:8px; align-items:center; padding:3px 0; font-size:13.5px; }
+  .shopping-aisle{ background:#fffdf8; border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .shopping-aisle h4{ font-family:'Fraunces',serif; color:var(--herb-dark); margin:0 0 10px 0; font-size:18px; }
+  .shopping-aisle label{ display:flex; gap:10px; align-items:center; padding:5px 0; font-size:16px; }
+  .shopping-aisle label input[type=checkbox]{ width:19px; height:19px; flex-shrink:0; }
   .shopping-aisle label.done{ text-decoration:line-through; opacity:.5; }
-  .ing-sub-btn{ background:none; border:none; color:var(--herb-dark); font-size:12px; cursor:pointer; padding:2px 4px; }
-  .ing-sub-note{ font-size:12px; color:var(--ink-soft); margin-top:4px; padding-left:2px; }
+  .ing-sub-btn{ background:none; border:none; color:var(--herb-dark); font-size:13.5px; cursor:pointer; padding:2px 4px; }
+  .ing-sub-note{ font-size:13.5px; color:var(--ink-soft); margin-top:4px; padding-left:2px; }
   .checkin-box{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-top:20px; }
   .checkin-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
   .checkin-row input, .checkin-row select{ flex:1; min-width:140px; }
