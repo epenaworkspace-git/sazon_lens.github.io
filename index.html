@@ -554,15 +554,31 @@
     background:var(--paper-card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
     padding:24px; display:grid; gap:18px; max-width:640px;
   }
-  .field{ display:grid; gap:6px; }
+  .field{ display:grid; gap:6px; min-width:0; }
   .field label{ font-weight:600; font-size:13.5px; }
   .field .hint{ font-size:12.5px; color:var(--ink-soft); }
-  .field .row{ display:flex; gap:8px; }
-  .field .row input, .field .row select{ flex:1; }
+  .field select, .field input[type=text], .field input[type=password], .field input[type=number]{ width:100%; min-width:0; }
+  .field .row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .field .row input, .field .row select{ flex:1; min-width:0; }
   .key-row{ position:relative; }
   a{ color:var(--accent-dark); }
   hr.sep{ border:none; border-top:1px solid var(--line); margin:2px 0; }
   .badge-free{ background:var(--herb); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- Navegador integrado ---------- */
+  .iab-overlay{ position:fixed; inset:0; z-index:1000; background:var(--paper); display:flex; flex-direction:column; }
+  .iab-topbar{ display:flex; gap:8px; align-items:center; padding:10px 12px; background:var(--paper-card); border-bottom:1px solid var(--line); }
+  .iab-url{ flex:1; min-width:0; }
+  .iab-body{ position:relative; flex:1; min-height:0; }
+  .iab-frame-wrap, .iab-result-wrap{ position:absolute; inset:0; overflow:auto; min-width:0; }
+  #iabFrame{ width:100%; height:100%; border:none; display:block; background:#fff; }
+  .iab-extract-fab{ position:absolute; bottom:18px; right:18px; z-index:5; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.28); }
+  .iab-result-wrap{ padding:16px; }
+  .iab-result-header{ margin-bottom:12px; }
+  @media (max-width:640px){
+    .iab-topbar{ padding:8px; gap:6px; }
+    .iab-topbar button{ padding:11px 14px; }
+  }
 
   footer{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:30px 0 10px 0; }
 
@@ -660,9 +676,30 @@
       <option value="youtube">YouTube</option>
     </select>
     <button type="button" id="globalSearchBtn">🔍 Buscar</button>
-    <span class="global-search-hint">Se abre en una pestaña nueva del navegador. Si pegas un enlace, se abre directo.</span>
+    <span class="global-search-hint">Se abre dentro de la misma app, sin salir de Sazón Lens.</span>
   </div>
 </header>
+
+<div id="inAppBrowser" class="iab-overlay" hidden>
+  <div class="iab-topbar">
+    <input type="text" id="iabUrlInput" class="iab-url" placeholder="Escribe una URL o busca una receta...">
+    <button type="button" id="iabGoBtn">Ir</button>
+    <button type="button" id="iabCloseBtn" class="tab-arrow" aria-label="Cerrar navegador">✕</button>
+  </div>
+  <div class="iab-body">
+    <div id="iabFrameWrap" class="iab-frame-wrap">
+      <iframe id="iabFrame" title="Navegador de recetas"></iframe>
+      <button type="button" id="iabExtractFab" class="iab-extract-fab" hidden>📖 Extraer receta</button>
+    </div>
+    <div id="iabResultWrap" class="iab-result-wrap" hidden>
+      <div class="iab-result-header">
+        <button type="button" id="iabBackBtn" class="secondary">‹ Volver al navegador</button>
+      </div>
+      <div id="iabStatusArea"></div>
+      <div id="iabRecipeResult"></div>
+    </div>
+  </div>
+</div>
 
 <main>
 
@@ -890,22 +927,6 @@
       <div id="settingsStatus"></div>
     </div>
 
-    <div class="settings-card" style="margin-top:18px;">
-      <div class="field">
-        <label>📖 Extraer receta desde cualquier página (botón flotante)</label>
-        <p class="card-summary" style="margin-top:0;">
-          Por seguridad, ningún sitio web (ni Sazón Lens) puede insertar botones dentro de otras páginas automáticamente —
-          eso solo lo puede hacer una extensión de navegador o un <strong>marcador especial (bookmarklet)</strong> que tú mismo agregues una sola vez.
-          Arrastra el botón de abajo a tu barra de marcadores/favoritos. Después, cuando estés viendo una receta en cualquier
-          página o video, toca ese marcador y te aparecerá un botón flotante "Extraer receta". Si la página no es de cocina, el botón no hará nada.
-        </p>
-        <div class="row" style="align-items:center;">
-          <a href="#" id="extractBookmarklet" class="secondary" style="display:inline-block; text-decoration:none; text-align:center; padding:11px 16px;" onclick="return false;">📖 Extraer receta (arrastrar a favoritos)</a>
-          <button type="button" class="secondary" id="copyBookmarkletBtn">📋 Copiar código del marcador</button>
-        </div>
-        <span class="hint">En celular, la mayoría de navegadores no permiten arrastrar: crea un marcador nuevo apuntando a cualquier página, edita su enlace y pega ahí el código copiado.</span>
-      </div>
-    </div>
     </section>
 
 </main>
@@ -3146,12 +3167,16 @@ async function resetCategoriesToDefault(){
   setStatus('categoryManageStatusArea','ok','Se restauraron las categorías predeterminadas.');
 }
 
-/* ============================= BÚSQUEDA GENERAL ============================= */
+/* ============================= BÚSQUEDA GENERAL / NAVEGADOR INTEGRADO ============================= */
 /* Barra siempre visible (dentro del header) para buscar una receta o pegar un
-   enlace directo. Si el texto parece un enlace, se abre tal cual en una
-   pestaña nueva; si no, se arma una búsqueda enfocada en cocina en el
-   buscador elegido y también se abre en una pestaña nueva — la navegación
-   ocurre en el propio navegador del usuario, no dentro de Sazón Lens. */
+   enlace directo. Todo ocurre DENTRO de Sazón Lens: se abre un navegador
+   integrado (iframe a pantalla completa), nunca una pestaña nueva. Mientras
+   se navega, se intenta leer el texto de la página en segundo plano; si
+   contiene suficientes palabras clave de cocina, aparece el botón flotante
+   "Extraer receta" (si no, simplemente no aparece — igual que en apps como
+   CookBooker). Algunos sitios bloquean esa lectura por seguridad del propio
+   navegador (CORS): en esos casos el botón no aparece, aunque la página sí
+   se pueda ver dentro del navegador integrado. */
 function looksLikeUrl(text){
   const t = text.trim();
   if(/^https?:\/\//i.test(t)) return true;
@@ -3161,22 +3186,19 @@ function looksLikeUrl(text){
 function ensureProtocol(url){
   return /^https?:\/\//i.test(url) ? url : 'https://' + url;
 }
+function buildSearchUrl(raw){
+  const engine = document.getElementById('globalSearchEngine').value;
+  const query = /receta|recipe/i.test(raw) ? raw : raw + ' receta';
+  if(engine === 'bing') return 'https://www.bing.com/search?q=' + encodeURIComponent(query);
+  if(engine === 'duckduckgo') return 'https://duckduckgo.com/?q=' + encodeURIComponent(query);
+  if(engine === 'youtube') return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
+  return 'https://www.google.com/search?q=' + encodeURIComponent(query);
+}
 function runGlobalSearch(){
   const input = document.getElementById('globalSearchInput');
   const raw = input.value.trim();
   if(!raw) return;
-  if(looksLikeUrl(raw)){
-    window.open(ensureProtocol(raw), '_blank', 'noopener');
-    return;
-  }
-  const engine = document.getElementById('globalSearchEngine').value;
-  const query = /receta|recipe/i.test(raw) ? raw : raw + ' receta';
-  let searchUrl;
-  if(engine === 'bing') searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
-  else if(engine === 'duckduckgo') searchUrl = 'https://duckduckgo.com/?q=' + encodeURIComponent(query);
-  else if(engine === 'youtube') searchUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
-  else searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(query);
-  window.open(searchUrl, '_blank', 'noopener');
+  openInAppBrowser(looksLikeUrl(raw) ? ensureProtocol(raw) : buildSearchUrl(raw));
 }
 document.getElementById('globalSearchBtn').addEventListener('click', runGlobalSearch);
 document.getElementById('globalSearchInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); runGlobalSearch(); } });
@@ -3188,57 +3210,96 @@ document.getElementById('globalSearchEngine').addEventListener('change', (e)=>{
   try{ localStorage.setItem('sazonLensSearchEngine', e.target.value); }catch(err){}
 });
 
-/* ============================= BOOKMARKLET "EXTRAER RECETA" ============================= */
-/* Este código se ejecuta DENTRO de la página que el usuario esté viendo (blog,
-   video, etc.) cuando toca el marcador — por eso sí puede insertar un botón
-   flotante ahí. Revisa si el contenido de la página tiene suficientes
-   palabras clave de cocina; si no las tiene, no hace nada (según lo pedido).
-   Si sí, copia el texto de la página al portapapeles (con respaldo visual si
-   el navegador bloquea el portapapeles) para que el usuario regrese a Sazón
-   Lens, pestaña "Desde Texto", y lo pegue para generar la receta con IA. */
-const BOOKMARKLET_SOURCE = `(function(){
-  var existing=document.getElementById('sazonlens-extract-fab');
-  if(existing){ existing.remove(); var ov=document.getElementById('sazonlens-extract-overlay'); if(ov) ov.remove(); return; }
-  var btn=document.createElement('button');
-  btn.id='sazonlens-extract-fab';
-  btn.textContent='📖 Extraer receta';
-  btn.style.cssText='position:fixed;bottom:22px;right:22px;z-index:2147483647;background:#c98a1f;color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-family:sans-serif;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer;';
-  btn.onclick=function(){
-    var bodyText=(document.body.innerText||'').trim();
-    var kw=/ingrediente|instruccion|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
-    var matches=(bodyText.match(kw)||[]).length;
-    if(matches<3){ alert('Esto no parece una receta de cocina. Este botón solo funciona para extraer recetas.'); return; }
-    var extracted=document.title+'\\n'+location.href+'\\n\\n'+bodyText.slice(0,8000);
-    function showResult(copied){
-      var overlay=document.createElement('div');
-      overlay.id='sazonlens-extract-overlay';
-      overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:20px;';
-      var safe=extracted.replace(/</g,'&lt;');
-      overlay.innerHTML='<div style="background:#fff;border-radius:12px;padding:20px;max-width:480px;width:100%;max-height:80vh;overflow:auto;font-family:sans-serif;">'+
-        '<h3 style="margin:0 0 10px;">📖 Receta detectada</h3>'+
-        '<p style="font-size:13px;color:#555;">'+(copied?'El texto se copió a tu portapapeles.':'No se pudo copiar automáticamente — selecciona y copia el texto de abajo.')+
-        ' Vuelve a Sazón Lens, abre la pestaña "Desde Texto" y pégalo para generar la receta.</p>'+
-        '<textarea readonly style="width:100%;height:200px;font-size:12px;">'+safe+'</textarea>'+
-        '<div style="text-align:right;margin-top:10px;"><button id="sazonlens-close-overlay" style="padding:8px 14px;">Cerrar</button></div></div>';
-      document.body.appendChild(overlay);
-      document.getElementById('sazonlens-close-overlay').onclick=function(){ overlay.remove(); };
-    }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(extracted).then(function(){ showResult(true); }).catch(function(){ showResult(false); });
-    } else { showResult(false); }
-  };
-  document.body.appendChild(btn);
-})();`;
-const BOOKMARKLET_HREF = 'javascript:' + encodeURIComponent(BOOKMARKLET_SOURCE);
-document.getElementById('extractBookmarklet').setAttribute('href', BOOKMARKLET_HREF);
-document.getElementById('copyBookmarkletBtn').addEventListener('click', async ()=>{
+/* ---- Navegador integrado (in-app browser) ---- */
+const iabEls = {
+  overlay: document.getElementById('inAppBrowser'),
+  urlInput: document.getElementById('iabUrlInput'),
+  frame: document.getElementById('iabFrame'),
+  frameWrap: document.getElementById('iabFrameWrap'),
+  resultWrap: document.getElementById('iabResultWrap'),
+  extractBtn: document.getElementById('iabExtractFab'),
+  recipeResult: document.getElementById('iabRecipeResult')
+};
+let iabCurrentUrl = '';
+let iabExtractedText = '';
+
+function openInAppBrowser(url){
+  iabEls.overlay.hidden = false;
+  iabEls.resultWrap.hidden = true;
+  iabEls.frameWrap.hidden = false;
+  navigateInAppBrowser(url);
+}
+function closeInAppBrowser(){
+  iabEls.overlay.hidden = true;
+  iabEls.frame.src = 'about:blank';
+  iabEls.extractBtn.hidden = true;
+  iabExtractedText = '';
+}
+async function navigateInAppBrowser(url){
+  iabCurrentUrl = url;
+  iabEls.urlInput.value = url;
+  iabEls.extractBtn.hidden = true;
+  iabExtractedText = '';
+  iabEls.frame.src = url;
   try{
-    await navigator.clipboard.writeText(BOOKMARKLET_HREF);
-    alert('Código copiado. Crea un marcador nuevo en tu navegador (apuntando a cualquier página) y pega este código en el campo de enlace/URL de ese marcador.');
+    const res = await fetch(url, { mode:'cors' });
+    if(!res.ok) return;
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const bodyText = (doc.body && doc.body.innerText ? doc.body.innerText : html.replace(/<[^>]+>/g,' ')).trim();
+    const kw = /ingrediente|instrucci[oó]n|preparaci[oó]n|receta|recipe|ingredients?|instructions?|horno|minutos|porci[oó]n|cucharada|taza|hornear|cocinar/gi;
+    const matches = (bodyText.match(kw) || []).length;
+    if(matches >= 3 && iabCurrentUrl === url){
+      iabExtractedText = bodyText.slice(0, 12000);
+      iabEls.extractBtn.hidden = false;
+    }
   }catch(e){
-    prompt('Copia manualmente este código y pégalo como enlace de un marcador nuevo:', BOOKMARKLET_HREF);
+    /* El sitio bloqueó la lectura de su contenido (CORS) o falló la red —
+       no podemos confirmar si es una receta, así que el botón no aparece. */
+  }
+}
+document.getElementById('iabGoBtn').addEventListener('click', ()=>{
+  const raw = iabEls.urlInput.value.trim();
+  if(!raw) return;
+  navigateInAppBrowser(looksLikeUrl(raw) ? ensureProtocol(raw) : buildSearchUrl(raw));
+});
+iabEls.urlInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('iabGoBtn').click(); }
+});
+document.getElementById('iabCloseBtn').addEventListener('click', closeInAppBrowser);
+document.getElementById('iabBackBtn').addEventListener('click', ()=>{
+  iabEls.resultWrap.hidden = true;
+  iabEls.frameWrap.hidden = false;
+});
+iabEls.extractBtn.addEventListener('click', async ()=>{
+  if(!settings.apiKey){
+    iabEls.frameWrap.hidden = true;
+    iabEls.resultWrap.hidden = false;
+    setStatus('iabStatusArea','error','Falta tu clave de API de Gemini. Ve a Configuración para agregarla (es gratis).');
+    return;
+  }
+  iabEls.frameWrap.hidden = true;
+  iabEls.resultWrap.hidden = false;
+  iabEls.recipeResult.innerHTML = '';
+  setStatus('iabStatusArea','loading','Extrayendo la receta de la página...');
+  try{
+    const recipe = await extractRecipeFromWebPage(iabCurrentUrl, iabExtractedText);
+    currentRecipe = recipe;
+    currentImageBase64 = null;
+    clearStatus('iabStatusArea');
+    renderRecipeCard(recipe, iabEls.recipeResult, {editable:true, saved:false});
+  }catch(err){
+    setStatus('iabStatusArea','error', err.message);
   }
 });
+async function extractRecipeFromWebPage(url, pageText){
+  const instruction = `El usuario está viendo esta página web dentro del navegador integrado de la app (${url}). A continuación está el texto visible de esa página. Extrae fielmente la receta que contiene, sin inventar datos que no aparezcan: título, ingredientes con cantidades, utensilios, pasos numerados y bien explicados, tiempos estimados y consejos. IMPORTANTE: sin importar el idioma original del texto, TODO tu texto de respuesta debe estar completamente en ${settings.language} — traduce lo que haga falta.\n\nTexto de la página:\n${pageText}`;
+  const parts = [{ text: instruction }];
+  const recipe = await runRecipeExtraction(parts);
+  recipe.sourceUrl = url;
+  recipe.sourceType = 'web';
+  return recipe;
+}
 
 /* ============================= VIDEO DE ORIGEN ============================= */
 function extractYouTubeId(url){
