@@ -2651,6 +2651,10 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
     saveBtn.disabled = true;
     statusEl.innerHTML = `<div class="status loading"><div class="spinner"></div><div>Guardando receta...</div></div>`;
     try{
+      await loadCategories();
+      if(!recipe.category){
+        recipe.category = inferCategoryId(recipe);
+      }
       const id = savedId || ('r_' + Date.now());
       const recipeResult = await storeSet('recipe:'+id, JSON.stringify(recipe));
       const idxRaw = await storeGet('recipe-index');
@@ -2995,7 +2999,7 @@ let categories = [];
 let categoriesLoaded = false;
 let activeCategoryFilter = null; // null = "Todas"
 /* Estado de expandido/colapsado de cada panel de categoría en "Mis recetas"
-   (se pierde al recargar la página; por defecto todos abiertos). */
+   (se pierde al recargar la página; por defecto todos cerrados). */
 let recipeGroupOpenState = {};
 /* Pila de categorías eliminadas durante esta sesión (se pierde al recargar
    la página o cerrar sesión), para poder deshacer eliminaciones accidentales. */
@@ -3017,6 +3021,74 @@ async function loadCategories(){
 async function saveCategories(){ await storeSet('categories', JSON.stringify(categories)); }
 
 function findCategory(id){ return categories.find(c=>c.id===id) || null; }
+
+/* ---------- Auto-categorización ----------
+   Cuando se guarda una receta sin categoría asignada manualmente, se infiere
+   una categoría a partir del tipo de comida (título, resumen, cocina,
+   etiquetas e ingredientes), comparando contra palabras clave por categoría.
+   El usuario siempre puede cambiarla manualmente después. */
+const CATEGORY_KEYWORDS = {
+  'mexicana': ['mexicana','mexicano','taco','enchilada','mole','pozole','tamal','quesadilla','salsa verde','salsa roja','birria','carnitas','al pastor','chile relleno'],
+  'entradas': ['entrada','aperitivo','appetizer','botana'],
+  'bebidas': ['bebida','coctel','cóctel','smoothie','licuado','jugo','agua fresca','margarita','café','te helado','limonada','batido'],
+  'tabla de embutidos': ['embutido','charcuteria','charcutería','tabla de quesos','jamon serrano','salami','carnes frias'],
+  'fiesta': ['fiesta','party','antojito','picoteo'],
+  'bajo en carbohidratos': ['bajo en carbohidratos','low carb','keto','cetogenica','cetogénica'],
+  'a la parrilla': ['parrilla','asado','asador','grill','a las brasas','carbon','carbón','bbq'],
+  'vegetariana': ['vegetariana','vegetariano','vegetarian'],
+  'india': ['india','hindu','curry','tikka','masala','naan','tandoori'],
+  'sin lacteos': ['sin lacteos','sin lácteos','dairy free','sin leche'],
+  'olla de coccion lenta': ['olla de coccion lenta','olla de cocción lenta','slow cooker','crockpot','coccion lenta'],
+  'asiatica': ['asiatica','asiática','china','japonesa','tailandesa','sushi','wok','ramen','pad thai','teriyaki','coreana'],
+  'mediterranea': ['mediterranea','mediterránea','griega','hummus','tabule','tabulé'],
+  'postre': ['postre','pastel','tarta','dulce','brownie','galleta','helado','flan','cheesecake','dessert'],
+  'italiana': ['italiana','italiano','pasta','pizza','risotto','lasagna','lasaña','carbonara'],
+  'vegana': ['vegana','vegano','vegan'],
+  'entrante': ['entrante'],
+  'ensaladas': ['ensalada','salad'],
+  'dias festivos': ['navidad','ano nuevo','año nuevo','accion de gracias','acción de gracias','festivo','navideño'],
+  'guarniciones': ['guarnicion','guarnición','acompañamiento','side dish'],
+  'cena': ['cena','dinner','plato fuerte'],
+  'desayuno': ['desayuno','breakfast','huevos','pancake','hotcake','avena','waffle'],
+  'sopas y guisos': ['sopa','caldo','guiso','crema de','menudo','soup','stew'],
+  'almuerzo': ['almuerzo','lunch'],
+  'panes y bollos': ['pan de','panes','bollo','baguette','bread','masa madre'],
+  'salsas y aderezos': ['salsa','aderezo','dressing','vinagreta','dip'],
+  'medio oriente': ['medio oriente','arabe','árabe','shawarma','kebab','falafel'],
+  'bocadillos': ['bocadillo','sandwich','sándwich','torta','snack'],
+  'horneados': ['horneado','al horno','baked'],
+  'francesa': ['francesa','francés','frances','croissant','quiche','ratatouille'],
+  'sin gluten': ['sin gluten','gluten free']
+};
+function normText(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function inferCategoryId(recipe){
+  if(!categories.length) return null;
+  const haystack = normText([
+    recipe.title, recipe.summary, recipe.cuisine,
+    (recipe.tags||[]).join(' '),
+    (recipe.ingredients||[]).map(i=>i && i.item).join(' ')
+  ].join(' '));
+
+  const scores = {};
+  for(const cat of categories){
+    const key = normText(cat.name);
+    let score = 0;
+    for(const kw of (CATEGORY_KEYWORDS[key] || [])){ if(haystack.includes(normText(kw))) score += 1; }
+    if(recipe.cuisine && key && normText(recipe.cuisine).includes(key)) score += 5;
+    if(score > 0) scores[cat.id] = score;
+  }
+  const rapido = categories.find(c=>normText(c.name)==='rapido y facil');
+  if(rapido && ((recipe.total_time_minutes && recipe.total_time_minutes <= 25) || normText(recipe.difficulty)==='facil')){
+    scores[rapido.id] = (scores[rapido.id]||0) + 2;
+  }
+
+  let bestId = null, bestScore = 0;
+  for(const id in scores){ if(scores[id] > bestScore){ bestScore = scores[id]; bestId = id; } }
+  if(bestId) return bestId;
+
+  const fallback = categories.find(c=>normText(c.name)==='cena');
+  return fallback ? fallback.id : null;
+}
 
 /* Selector de categoría con buscador, usado dentro de la tarjeta de receta para
    asignar UNA categoría a esa receta en particular. */
@@ -3375,14 +3447,14 @@ async function renderRecipesGrid(){
     const items = groups.get(key);
     const cat = key ? findCategory(key) : null;
     const groupKey = key || '__none__';
-    const isOpen = recipeGroupOpenState[groupKey] !== false; // por defecto abierto
+    const isOpen = recipeGroupOpenState[groupKey] === true; // por defecto cerrado: solo se ve emoji + nombre + flecha
 
     const section = document.createElement('div');
     section.className = 'accordion-item recipe-group' + (isOpen ? ' open' : '');
     section.innerHTML = `
       <button type="button" class="accordion-header">
         <span class="acc-icon">${cat ? '🏷' : '📂'}</span>
-        <span class="acc-title"${cat ? ` style="color:${cat.color};"` : ''}>${cat ? escapeHtml(cat.name) : 'Sin categoría'} <span class="group-count">(${items.length})</span></span>
+        <span class="acc-title"${cat ? ` style="color:${cat.color};"` : ''}>${cat ? escapeHtml(cat.name) : 'Sin categoría'}</span>
         <span class="acc-chevron">▾</span>
       </button>
       <div class="accordion-body"><div class="recipes-grid"></div></div>`;
