@@ -528,6 +528,12 @@
   .video-link-line{ font-size:12.5px; color:var(--ink-soft); word-break:break-all; }
 
   /* ---------- My recipes ---------- */
+  #recipesGrid.accordion{ margin-top:14px; }
+  #recipesGrid .accordion-item.recipe-group{ background:var(--paper-card); }
+  #recipesGrid .accordion-header{ padding:14px 16px; }
+  #recipesGrid .acc-title{ display:flex; align-items:center; gap:8px; font-weight:600; }
+  #recipesGrid .group-count{ font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:12px; color:var(--ink-soft); }
+  #recipesGrid .accordion-body{ padding:0 16px 16px 16px; }
   .recipes-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
   .recipe-mini{
     background:var(--paper-card); border-radius:14px; border:1px solid var(--line); box-shadow:var(--shadow-sm);
@@ -535,6 +541,13 @@
     transition: box-shadow .2s var(--ease), transform .2s var(--ease);
   }
   .recipe-mini:hover{ box-shadow:var(--shadow-lift); transform:translateY(-4px); }
+  .hero-wrap{ position:relative; }
+  .hero-regen-btn{
+    display:flex; align-items:center; gap:6px; margin:8px auto 0; padding:6px 14px;
+    font-size:12.5px; width:max-content;
+  }
+  .card-hero-placeholder{ height:auto; min-height:150px; flex-direction:column; gap:10px; padding:20px 16px; }
+  .card-hero-placeholder .act-image{ width:max-content; }
   .recipe-mini img{ width:100%; height:120px; object-fit:cover; background:var(--paper-dark); }
   .recipe-mini .ph{ width:100%; height:120px; background:var(--paper-dark); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:24px;}
   .recipe-mini .mini-body{ padding:12px; flex:1; display:flex; flex-direction:column; gap:6px; }
@@ -818,7 +831,7 @@
     <div class="intro"><p>Tus recetas guardadas, listas para cocinar cuando quieras.</p></div>
     <div class="cat-filter-bar" id="categoryFilterBar"></div>
     <div id="categoryManagePanel" hidden></div>
-    <div class="recipes-grid" id="recipesGrid"></div>
+    <div class="accordion" id="recipesGrid"></div>
     <p class="empty-state" id="emptyRecipes" hidden>Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".</p>
   </section>
 
@@ -2534,8 +2547,15 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
   card.innerHTML = `
     <div class="card-holes"><span></span><span></span></div>
     <div class="card-body">
-      ${recipe.image ? `<img class="card-hero" src="${recipe.image}" alt="Foto del plato">` :
-        (noAI ? '' : `<div class="card-hero-placeholder" data-role="hero-ph">Sin foto todavía — genera una con "Generar imagen del plato"</div>`)}
+      ${recipe.image ? `
+        <div class="hero-wrap">
+          <img class="card-hero" src="${recipe.image}" alt="Foto del plato">
+          ${noAI ? '' : `<button type="button" class="secondary hero-regen-btn act-image">🔄 Regenerar imagen</button>`}
+        </div>` :
+        (noAI ? '' : `<div class="card-hero-placeholder" data-role="hero-ph">
+          <span>Sin foto todavía</span>
+          <button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>
+        </div>`)}
       <div class="card-title-row">
         <h2>${escapeHtml(recipe.title || 'Receta sin título')}</h2>
       </div>
@@ -2555,7 +2575,6 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
       <div class="accordion">${accordionSections}</div>
 
       <div class="card-actions">
-        ${(!recipe.image && !noAI) ? `<button type="button" class="secondary act-image">🖼 Generar imagen del plato</button>` : ''}
         <button type="button" class="secondary act-save">💾 ${saved ? 'Actualizar receta' : 'Guardar receta'}</button>
         <button type="button" class="secondary act-print">🖨 Imprimir</button>
         <button type="button" class="secondary act-pdf">⬇ Descargar PDF</button>
@@ -2975,6 +2994,9 @@ const DEFAULT_CATEGORIES = DEFAULT_CATEGORY_NAMES.map((name, i)=>({
 let categories = [];
 let categoriesLoaded = false;
 let activeCategoryFilter = null; // null = "Todas"
+/* Estado de expandido/colapsado de cada panel de categoría en "Mis recetas"
+   (se pierde al recargar la página; por defecto todos abiertos). */
+let recipeGroupOpenState = {};
 /* Pila de categorías eliminadas durante esta sesión (se pierde al recargar
    la página o cerrar sesión), para poder deshacer eliminaciones accidentales. */
 let deletedCategoryStack = [];
@@ -3289,6 +3311,24 @@ function renderVideoPreview(slot, url){
 }
 
 /* ============================= MY RECIPES GRID ============================= */
+function recipeMiniCard(id, recipe, cat){
+  const mini = document.createElement('div');
+  mini.className = 'recipe-mini';
+  mini.innerHTML = `
+    ${recipe.image ? `<img src="${recipe.image}" alt="">` : `<div class="ph">🍽</div>`}
+    <div class="mini-body">
+      <h3>${escapeHtml(recipe.title||'Sin título')}</h3>
+      <div class="mini-meta">${recipe.servings||'-'} porciones · ${recipe.total_time_minutes||'-'} min</div>
+      <div class="mini-actions"><button type="button" class="ghost">Ver →</button></div>
+    </div>`;
+  mini.addEventListener('click', ()=>{
+    document.querySelector('.tab-btn[data-tab="extract"]').click();
+    renderRecipeCard(recipe, document.getElementById('recipeResult'), {editable:true, saved:true, savedId:id});
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+  return mini;
+}
+
 async function renderRecipesGrid(){
   await loadCategories();
   const grid = document.getElementById('recipesGrid');
@@ -3297,8 +3337,15 @@ async function renderRecipesGrid(){
   let idx = [];
   try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
   grid.innerHTML = '';
-  if(!idx.length){ empty.hidden = false; return; }
+  grid.className = 'accordion';
+  if(!idx.length){
+    empty.hidden = false;
+    empty.textContent = 'Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".';
+    return;
+  }
 
+  // Cargar y filtrar recetas, agrupándolas por categoría
+  const groups = new Map(); // catId (o null = "sin categoría") -> [{id, recipe}]
   let shown = 0;
   for(const id of idx){
     const raw = await storeGet('recipe:'+id);
@@ -3307,31 +3354,48 @@ async function renderRecipesGrid(){
     try{ recipe = JSON.parse(raw); }catch(e){ continue; }
     if(activeCategoryFilter && recipe.category !== activeCategoryFilter) continue;
     shown++;
-    const cat = recipe.category ? findCategory(recipe.category) : null;
-    const mini = document.createElement('div');
-    mini.className = 'recipe-mini';
-    mini.innerHTML = `
-      ${recipe.image ? `<img src="${recipe.image}" alt="">` : `<div class="ph">🍽</div>`}
-      <div class="mini-body">
-        <h3>${escapeHtml(recipe.title||'Sin título')}</h3>
-        <div class="mini-meta">${recipe.servings||'-'} porciones · ${recipe.total_time_minutes||'-'} min</div>
-        ${cat ? `<span class="cat-chip" style="align-self:flex-start; border-color:${cat.color}; color:${cat.color}; padding:3px 10px; font-size:11.5px;">${escapeHtml(cat.name)}</span>` : ''}
-        <div class="mini-actions"><button type="button" class="ghost">Ver →</button></div>
-      </div>`;
-    mini.addEventListener('click', ()=>{
-      document.querySelector('.tab-btn[data-tab="extract"]').click();
-      renderRecipeCard(recipe, document.getElementById('recipeResult'), {editable:true, saved:true, savedId:id});
-      window.scrollTo({top:0, behavior:'smooth'});
-    });
-    grid.appendChild(mini);
+    const key = recipe.category || null;
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({id, recipe});
   }
-  empty.hidden = shown > 0;
-  if(!shown && idx.length){
+
+  if(!shown){
     empty.hidden = false;
     empty.textContent = 'No hay recetas guardadas en esta categoría todavía.';
-  } else if(!idx.length){
-    empty.hidden = false;
-    empty.textContent = 'Todavía no guardaste ninguna receta. Extrae una desde la pestaña "Extraer" y presiona "Guardar receta".';
+    return;
+  }
+  empty.hidden = true;
+
+  // Orden: categorías en el orden en que existen, luego "Sin categoría" al final
+  const orderedKeys = [];
+  for(const cat of categories){ if(groups.has(cat.id)) orderedKeys.push(cat.id); }
+  if(groups.has(null)) orderedKeys.push(null);
+
+  for(const key of orderedKeys){
+    const items = groups.get(key);
+    const cat = key ? findCategory(key) : null;
+    const groupKey = key || '__none__';
+    const isOpen = recipeGroupOpenState[groupKey] !== false; // por defecto abierto
+
+    const section = document.createElement('div');
+    section.className = 'accordion-item recipe-group' + (isOpen ? ' open' : '');
+    section.innerHTML = `
+      <button type="button" class="accordion-header">
+        <span class="acc-icon">${cat ? '🏷' : '📂'}</span>
+        <span class="acc-title"${cat ? ` style="color:${cat.color};"` : ''}>${cat ? escapeHtml(cat.name) : 'Sin categoría'} <span class="group-count">(${items.length})</span></span>
+        <span class="acc-chevron">▾</span>
+      </button>
+      <div class="accordion-body"><div class="recipes-grid"></div></div>`;
+    section.querySelector('.accordion-header').addEventListener('click', ()=>{
+      const willOpen = !section.classList.contains('open');
+      recipeGroupOpenState[groupKey] = willOpen;
+      section.classList.toggle('open', willOpen);
+    });
+    const body = section.querySelector('.recipes-grid');
+    for(const {id, recipe} of items){
+      body.appendChild(recipeMiniCard(id, recipe, cat));
+    }
+    grid.appendChild(section);
   }
 }
 
