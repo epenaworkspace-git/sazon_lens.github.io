@@ -2361,13 +2361,21 @@ function renderShoppingList(list, checkedIdx){
     </div>
     <div id="shoppingListStatusArea"></div>
     <div class="card-actions">
+      <button type="button" class="secondary" id="clearShoppingListChecksBtn">🧹 Limpiar marcas de compra</button>
       <button type="button" class="secondary" id="saveShoppingListBtn">💾 Guardar</button>
       <button type="button" class="secondary" id="copyShoppingListBtn">📋 Copiar lista</button>
     </div>
   `;
   document.getElementById('planResult').appendChild(box);
+  /* Cada casilla se guarda sola en cuanto se marca o desmarca, igual que en
+     las recetas — no depende de tocar "Guardar". El botón "💾 Guardar" se
+     deja disponible por si el usuario quiere forzar un guardado o confirmar
+     que sí quedó sincronizado con su cuenta, pero ya no es indispensable. */
   box.querySelectorAll('.shop-check').forEach(cb=>{
-    cb.addEventListener('change', e=> e.target.closest('label').classList.toggle('done', e.target.checked));
+    cb.addEventListener('change', e=>{
+      e.target.closest('label').classList.toggle('done', e.target.checked);
+      saveShoppingListProgress({ silent:true });
+    });
   });
   if(checkedIdx && checkedIdx.length){
     box.querySelectorAll('.shop-check').forEach(cb=>{
@@ -2377,7 +2385,14 @@ function renderShoppingList(list, checkedIdx){
       }
     });
   }
-  document.getElementById('saveShoppingListBtn').addEventListener('click', saveShoppingListProgress);
+  document.getElementById('saveShoppingListBtn').addEventListener('click', ()=>saveShoppingListProgress());
+  document.getElementById('clearShoppingListChecksBtn').addEventListener('click', ()=>{
+    box.querySelectorAll('.shop-check').forEach(cb=>{
+      cb.checked = false;
+      cb.closest('label').classList.remove('done');
+    });
+    saveShoppingListProgress({ silent:true });
+  });
   document.getElementById('copyShoppingListBtn').addEventListener('click', async ()=>{
     let text = 'Lista de compras\n\n';
     (list.aisles||[]).forEach(aisle=>{
@@ -2392,19 +2407,21 @@ function renderShoppingList(list, checkedIdx){
 
 /* Guarda la lista de compras generada junto con qué casillas están marcadas,
    vinculado a la cuenta del usuario. storeSet ya se encarga de sincronizar
-   con Firestore cuando hay sesión iniciada, igual que el plan semanal. */
-async function saveShoppingListProgress(){
+   con Firestore cuando hay sesión iniciada, igual que el plan semanal.
+   Con silent:true (usado en el autoguardado de cada casilla) no se muestran
+   mensajes de estado ni se deshabilita el botón, para no ser intrusivo. */
+async function saveShoppingListProgress({ silent } = {}){
   const box = document.getElementById('shoppingListBox');
   if(!box || !lastGeneratedShoppingList) return;
   const btn = document.getElementById('saveShoppingListBtn');
-  btn.disabled = true;
-  setStatus('shoppingListStatusArea','loading','Guardando tu progreso...');
+  if(!silent){ btn.disabled = true; setStatus('shoppingListStatusArea','loading','Guardando tu progreso...'); }
   try{
     const checked = Array.from(box.querySelectorAll('.shop-check'))
       .filter(cb=>cb.checked)
       .map(cb=>Number(cb.dataset.idx));
     const state = { list: lastGeneratedShoppingList, checked };
     const result = await storeSet('shoppinglist', JSON.stringify(state));
+    if(silent) return;
     if(result.cloud){
       setStatus('shoppingListStatusArea','ok','Progreso guardado y sincronizado con tu cuenta. Se cargará automáticamente la próxima vez que entres.');
     } else if(result.local){
@@ -2413,9 +2430,9 @@ async function saveShoppingListProgress(){
       setStatus('shoppingListStatusArea','error','No se pudo guardar el progreso en ningún lado.');
     }
   }catch(err){
-    setStatus('shoppingListStatusArea','error','No se pudo guardar el progreso: ' + err.message);
+    if(!silent) setStatus('shoppingListStatusArea','error','No se pudo guardar el progreso: ' + err.message);
   }finally{
-    btn.disabled = false;
+    if(!silent) btn.disabled = false;
   }
 }
 
