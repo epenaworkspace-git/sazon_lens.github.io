@@ -2609,10 +2609,11 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
       ${(recipe.nutrition.vitamins_minerals && recipe.nutrition.vitamins_minerals.length) ? `<div class="nutrition-extra"><strong>Aporta:</strong> ${recipe.nutrition.vitamins_minerals.map(v=>escapeHtml(v)).join(', ')}</div>` : ''}`, false) : '',
 
     accordionItem(recipe, 'ingredients', '🥣', 'Ingredientes', `
+      ${noAI ? '' : `<div class="card-actions" style="margin-bottom:10px;"><button type="button" class="secondary clear-shopping-checks-btn">🧹 Limpiar marcas de compra</button></div>`}
       <ul class="ingredients">
         ${recipe.ingredients.map((ing,i)=>`
-          <li data-i="${i}">
-            <input type="checkbox" class="ing-check">
+          <li data-i="${i}"${(recipe.shoppingChecked||[]).includes(i) ? ' class="done"' : ''}>
+            <input type="checkbox" class="ing-check"${(recipe.shoppingChecked||[]).includes(i) ? ' checked' : ''}>
             <label style="flex:1;"><span class="amt">${fmtAmount(ing.amount*scale)} ${escapeHtml(ing.unit)}</span> ${escapeHtml(ing.item)} ${ing.notes ? `<em style="color:var(--ink-soft); font-size:12.5px;">(${escapeHtml(ing.notes)})</em>`:''}
               ${noAI ? '' : `<button type="button" class="ing-sub-btn" data-ingredient="${escapeHtml(ing.item)}">🔄 Sustituir</button>`}
               <div class="ing-sub-note" hidden></div>
@@ -2833,9 +2834,37 @@ function renderRecipeCard(recipe, container, {editable, saved, savedId, noAI} = 
   });
 
   // checklist toggles
+  /* Las casillas de "ya lo llevo en el carrito" se guardan solas, sin que el
+     usuario tenga que tocar "Actualizar receta" — así, si el súper cierra la
+     app o se distrae, no pierde lo que ya llevaba marcado. Solo se guarda
+     así si la receta ya está guardada (tiene savedId); si aún no se guardó,
+     las marcas solo viven en esta sesión hasta que la guarde. */
+  async function persistShoppingProgress(){
+    if(!savedId) return;
+    try{ await storeSet('recipe:'+savedId, JSON.stringify(recipe)); }catch(e){ /* no se interrumpe la compra por un fallo de guardado silencioso */ }
+  }
   card.querySelectorAll('.ing-check').forEach(cb=>{
-    cb.addEventListener('change', (e)=>{ e.target.closest('li').classList.toggle('done', e.target.checked); });
+    cb.addEventListener('change', (e)=>{
+      const li = e.target.closest('li');
+      li.classList.toggle('done', e.target.checked);
+      const i = Number(li.dataset.i);
+      if(!recipe.shoppingChecked) recipe.shoppingChecked = [];
+      if(e.target.checked){
+        if(!recipe.shoppingChecked.includes(i)) recipe.shoppingChecked.push(i);
+      } else {
+        recipe.shoppingChecked = recipe.shoppingChecked.filter(x=>x!==i);
+      }
+      persistShoppingProgress();
+    });
   });
+  const clearShoppingBtn = card.querySelector('.clear-shopping-checks-btn');
+  if(clearShoppingBtn){
+    clearShoppingBtn.addEventListener('click', async ()=>{
+      recipe.shoppingChecked = [];
+      await persistShoppingProgress();
+      renderRecipeCard(recipe, container, {editable, saved, savedId, noAI});
+    });
+  }
   card.querySelectorAll('.step-check').forEach(cb=>{
     cb.addEventListener('change', (e)=>{ e.target.closest('li').classList.toggle('done', e.target.checked); });
   });
